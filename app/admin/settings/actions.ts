@@ -13,16 +13,6 @@ interface ThemeUpdate {
   secondary: string;
 }
 
-interface LogoUpdate {
-  file: {
-    name: string;
-    type: string;
-    size: number;
-    arrayBuffer: () => Promise<ArrayBuffer>;
-  };
-  orgName: string;
-}
-
 export async function updateOrganizationTheme(theme: ThemeUpdate) {
   const { userId, orgId: clerkOrgId } = await auth();
 
@@ -72,7 +62,7 @@ export async function updateOrganizationTheme(theme: ThemeUpdate) {
   revalidatePath("/admin/settings");
 }
 
-export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
+export async function updateOrganizationLogo(formData: FormData) {
   const { userId, orgId: clerkOrgId } = await auth();
 
   if (!clerkOrgId || !userId) {
