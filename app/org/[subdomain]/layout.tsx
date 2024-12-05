@@ -11,13 +11,11 @@ interface OrganizationLayoutProps {
 }
 
 async function getOrganization(subdomain: string) {
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.subdomain, subdomain),
-    with: {
-      settings: true,
-      landingPage: true,
-    },
-  });
+  const org = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.subdomain, subdomain))
+    .then(res => res[0]);
 
   if (!org) {
     return null;
