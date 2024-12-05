@@ -52,12 +52,12 @@ const routes = [
     href: '/admin/data',
     color: "text-violet-500",
   },
-  // {
-  //   label: 'Settings',
-  //   icon: Settings,
-  //   href: '/admin/settings',
-  //   color: "text-violet-500",
-  // },
+  {
+    label: 'Settings',
+    icon: Settings,
+    href: '/admin/settings',
+    color: "text-violet-500",
+  },
 ]
 
 export default function DashboardLayout({

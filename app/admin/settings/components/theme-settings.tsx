@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { updateOrganizationTheme, getOrganizationTheme, updateOrganizationLogo, removeOrganizationLogo } from "../actions"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast";
 import { ImageIcon, Trash2 } from "lucide-react"
 
 export function ThemeSettings() {
+  const { toast } = useToast()
   const { organization } = useOrganization()
   const [primaryColor, setPrimaryColor] = useState("#3B82F6")
   const [secondaryColor, setSecondaryColor] = useState("#10B981")
@@ -28,7 +29,10 @@ export function ThemeSettings() {
         }
       } catch (error) {
         console.error('Error loading theme settings:', error);
-        toast.error("Failed to load theme settings");
+        toast({
+          variant: "destructive",
+          title: "Failed to load theme settings",
+        })
       }
     }
 
@@ -44,10 +48,15 @@ export function ThemeSettings() {
         primary: primaryColor,
         secondary: secondaryColor,
       })
-      toast.success("Theme colors updated successfully")
+      toast({
+        title: "Theme colors updated successfully",
+      })
     } catch (error) {
       console.error(error)
-      toast.error("Failed to update theme colors")
+      toast({
+        variant: "destructive",
+        title: "Failed to update theme colors",
+      })
     } finally {
       setLoading(false)
     }

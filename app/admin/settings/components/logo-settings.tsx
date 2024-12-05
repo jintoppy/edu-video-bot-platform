@@ -3,12 +3,13 @@
 import { useState, useCallback, useEffect } from "react"
 import { useOrganization } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
+import { useToast } from "@/hooks/use-toast";
 import { updateOrganizationLogo, removeOrganizationLogo, getOrganizationLogo } from "../actions"
 import Image from "next/image"
 import { useDropzone } from "react-dropzone"
 
 export function LogoSettings() {
+  const { toast } = useToast()
   const { organization } = useOrganization()
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
@@ -24,7 +25,11 @@ export function LogoSettings() {
         }
       } catch (error) {
         console.error('Error loading logo:', error);
-        toast.error("Failed to load logo");
+        toast({
+          variant: "destructive",
+          title: "Error loading logo",
+          description: "Failed to load logo. Please try again"
+        })
       }
     }
 
@@ -49,10 +54,15 @@ export function LogoSettings() {
       
       // Update preview with the actual URL
       setPreview(url)
-      toast.success("Organization logo has been updated successfully")
+      toast({
+        title: "Organization logo has been updated successfully",
+      })
     } catch (error) {
       console.error('Error updating logo:', error)
-      toast.error("Failed to update organization logo. Please try again.")
+      toast({
+        variant: "destructive",
+        title: "Failed to update organization logo. Please try again.",
+      });
       // Revert preview on error
       setPreview(null)
     } finally {
@@ -74,10 +84,15 @@ export function LogoSettings() {
     try {
       await removeOrganizationLogo();
       setPreview(null);
-      toast.success("Organization logo has been removed successfully");
+      toast({
+        title: "Organization logo has been removed successfully",
+      })
     } catch (error) {
       console.error(error);
-      toast.error("Failed to remove organization logo. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Failed to remove organization logo. Please try again.",
+      });
     } finally {
       setLoading(false);
     }

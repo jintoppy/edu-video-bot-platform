@@ -1,12 +1,13 @@
-import { sql } from "drizzle-orm";
+import { InferSelectModel, sql } from "drizzle-orm";
 import { pgTable, uuid, text, timestamp, jsonb, boolean, real, pgEnum, vector } from "drizzle-orm/pg-core";
 
 export const createVectorExtension = sql`CREATE EXTENSION IF NOT EXISTS vector`;
 
 
-export const userRoleEnum = pgEnum("userType", [
-  "admin",
-  "counselor",
+export const userRoleEnum = pgEnum("userRole", [
+  "super_admin",
+  "org:admin",
+  "org:member",
   "student"
 ]);
 
@@ -65,12 +66,125 @@ export const documentCategoryEnum = pgEnum("document_category", [
   "general",               // Other general content
 ]);
 
+export const orgStatusEnum = pgEnum("org_status", [
+  "active",
+  "inactive",
+  "suspended",
+  "pending"
+]);
+
+export const organizations = pgTable("organizations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  subdomain: text("subdomain").notNull().unique(),
+  customDomain: text("custom_domain").unique(),
+  status: orgStatusEnum("status").notNull().default("pending"),
+  
+  // Contact Information
+  email: text("email").notNull(),
+  phone: text("phone"),
+  address: jsonb("address"),
+  
+  // Subscription/Billing (basic fields - can be expanded)
+  planType: text("plan_type").notNull().default("free"),
+  subscriptionStatus: text("subscription_status").notNull().default("active"),
+  
+  // Metadata
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const organizationSettings = pgTable("organization_settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
+  
+  // Branding
+  logo: text("logo_url"),
+  favicon: text("favicon_url"),
+  
+  // Theme
+  theme: jsonb("theme").default({
+    primaryColor: "#3B82F6",
+    secondaryColor: "#10B981",
+    accentColor: "#6366F1",
+    fontFamily: "Inter"
+  }),
+  
+  // Features Configuration
+  features: jsonb("features").default({
+    videoBot: true,
+    liveChat: true,
+    programManagement: true,
+    analytics: true
+  }),
+  
+  // Custom Scripts/Tracking
+  scripts: jsonb("scripts").$type<{
+    header?: string[];
+    body?: string[];
+  }>(),
+  
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const landingPages = pgTable("landing_pages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
+  
+  // Page Content
+  sections: jsonb("sections").$type<{
+    id: string;
+    type: string;
+    content: Record<string, any>;
+    order: number;
+  }[]>(),
+  
+  // SEO
+  seo: jsonb("seo").default({
+    title: "",
+    description: "",
+    keywords: [],
+    ogImage: ""
+  }),
+  
+  // Publishing
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  
+  // Versioning
+  version: text("version").notNull().default("1.0"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").references(() => organizations.id),  // Optional for platform-level users
   clerkId: text("clerk_id").notNull().unique(),
   email: text("email").notNull(),
   fullName: text("full_name").notNull(),
-  role: userRoleEnum("userType").notNull().default("student"),
+  role: userRoleEnum("userRole").notNull().default('student'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const organizationInvitations = pgTable("organization_invitations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
+  email: text("email").notNull(),
+  role: userRoleEnum("userRole").notNull(),
+  status: text("status").notNull().default("pending"),
+  invitedBy: uuid("invited_by").references(() => users.id),
+  clerkInvitationId: text("clerk_invitation_id").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -91,6 +205,9 @@ export const studentProfiles = pgTable("student_profiles", {
 
 export const programs = pgTable("programs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
   universityId: uuid("university_id"),
   name: text("name").notNull(),
   level: text("level").notNull(),
@@ -284,3 +401,4 @@ export const programEnrollmentRequests = pgTable("program_enrollment_requests", 
 export type MessageType = typeof messageTypeEnum.enumValues;
 export type UserRole = typeof userRoleEnum.enumValues;
 export type EnrollmentStatus = typeof enrollmentStatusEnum.enumValues;
+export type Organization = InferSelectModel<typeof organizations>

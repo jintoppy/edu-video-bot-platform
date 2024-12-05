@@ -11,11 +11,9 @@ interface OrganizationLayoutProps {
 }
 
 async function getOrganization(subdomain: string) {
-  const org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.subdomain, subdomain))
-    .then(res => res[0]);
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.subdomain, subdomain),
+  });
 
   if (!org) {
     return null;
@@ -24,9 +22,9 @@ async function getOrganization(subdomain: string) {
   return org;
 }
 
-export default async function OrganizationLayout({ 
+export default async function OrganizationLayout({
   children,
-  params 
+  params,
 }: OrganizationLayoutProps) {
   const organization = await getOrganization(params.subdomain);
 

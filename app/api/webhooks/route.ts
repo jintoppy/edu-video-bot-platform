@@ -2,7 +2,8 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { db } from "@/lib/db";
-import { users } from '@/lib/db/schema';
+import { users, organizationInvitations, organizations } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   const SIGNING_SECRET = process.env.SIGNING_SECRET
@@ -56,6 +57,33 @@ export async function POST(req: Request) {
         email: evt.data.email_addresses[0].email_address,
         fullName: `${evt.data.first_name} ${evt.data.last_name}`
     });
+  }
+  if (evt.type === 'organizationInvitation.accepted') {
+    const invitation = evt.data;
+    const { organization_id } = invitation;
+    
+    if (!organization_id) {
+      console.error('No orgId found in invitation metadata');
+      return;
+    }
+
+    // Update organization invitation status
+    await db.update(organizationInvitations)
+      .set({ 
+        status: "accepted",
+        updatedAt: new Date()
+      })
+      .where(eq(organizationInvitations.clerkInvitationId, invitation.id));
+
+    // Update organization status to active
+    await db.update(organizations)
+      .set({ 
+        status: "active",
+        updatedAt: new Date()
+      })
+      .where(eq(organizations.id, organization_id as string));
+
+    console.log('Updated organization and invitation status');
   }
   console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
   console.log('Webhook payload:', body)
