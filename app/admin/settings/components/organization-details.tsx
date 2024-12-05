@@ -11,7 +11,7 @@ import { updateOrganizationDetails, getOrganizationDetails } from "../actions"
 export function OrganizationDetails() {
   const { toast } = useToast()
   const { organization } = useOrganization()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [details, setDetails] = useState({
     name: '',
     subdomain: '',
@@ -34,12 +34,15 @@ export function OrganizationDetails() {
         toast({
           variant: "destructive",
           title: "Failed to load organization details",
+          description: "Please refresh the page to try again."
         })
+      } finally {
+        setLoading(false);
       }
     }
 
     loadDetails();
-  }, [organization?.id]);
+  }, [organization?.id, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,7 +127,7 @@ export function OrganizationDetails() {
       </div>
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Save Changes"}
+        {loading ? "Loading..." : "Save Changes"}
       </Button>
     </form>
   )
