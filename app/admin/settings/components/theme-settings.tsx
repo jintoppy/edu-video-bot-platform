@@ -6,8 +6,9 @@ import { HexColorPicker } from "react-colorful"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { updateOrganizationTheme, getOrganizationTheme } from "../actions"
+import { updateOrganizationTheme, getOrganizationTheme, updateOrganizationLogo, removeOrganizationLogo } from "../actions"
 import { toast } from "sonner"
+import { ImageIcon, Trash2 } from "lucide-react"
 
 export function ThemeSettings() {
   const { organization } = useOrganization()
@@ -52,8 +53,62 @@ export function ThemeSettings() {
     }
   }
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !organization?.name) return;
+
+    try {
+      await updateOrganizationLogo({
+        file,
+        orgName: organization.name
+      });
+      toast.success("Logo uploaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload logo");
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    try {
+      await removeOrganizationLogo();
+      toast.success("Logo removed successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to remove logo");
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="space-y-4">
+        <Label>Organization Logo</Label>
+        <div className="flex items-center gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById('logo-upload')?.click()}
+          >
+            <ImageIcon className="mr-2 h-4 w-4" />
+            Upload Logo
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleLogoRemove}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Remove Logo
+          </Button>
+          <input
+            id="logo-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleLogoUpload}
+          />
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
           <Label>Primary Color</Label>
