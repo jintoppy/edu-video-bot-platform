@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSettings } from "./components/theme-settings";
 import { LogoSettings } from "./components/logo-settings";
+import { OrganizationDetails } from "./components/organization-details";
 
 export default function SettingsPage() {
 
@@ -27,11 +28,25 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="theme" className="space-y-4">
+      <Tabs defaultValue="organization" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="organization">Organization</TabsTrigger>
           <TabsTrigger value="theme">Theme</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
         </TabsList>
+        <TabsContent value="organization">
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization Details</CardTitle>
+              <CardDescription>
+                Manage your organization&apos;s basic information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OrganizationDetails />
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="theme">
           <Card>
             <CardHeader>

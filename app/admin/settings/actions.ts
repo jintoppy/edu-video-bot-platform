@@ -189,6 +189,82 @@ export async function getOrganizationLogo() {
   return settings?.logo || null;
 }
 
+export async function getOrganizationDetails() {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
+    throw new Error("Not authenticated or no organization");
+  }
+
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.id, orgId),
+  });
+
+  if (!org) {
+    throw new Error("Organization not found");
+  }
+
+  return {
+    name: org.name,
+    subdomain: org.subdomain,
+    email: org.email,
+    phone: org.phone || '',
+    address: org.address || '',
+  };
+}
+
+export async function updateOrganizationDetails(details: {
+  name: string;
+  subdomain: string;
+  phone: string;
+  address: string;
+}) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
+    throw new Error("Not authenticated or no organization");
+  }
+
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  // Check if subdomain is already taken by another organization
+  const existingOrg = await db.query.organizations.findFirst({
+    where: eq(organizations.subdomain, details.subdomain),
+  });
+
+  if (existingOrg && existingOrg.id !== orgId) {
+    throw new Error("Subdomain is already taken");
+  }
+
+  await db
+    .update(organizations)
+    .set({
+      name: details.name,
+      subdomain: details.subdomain,
+      phone: details.phone,
+      address: details.address,
+      updatedAt: new Date(),
+    })
+    .where(eq(organizations.id, orgId));
+
+  // Update the Clerk organization name to keep it in sync
+  await clerkClient.organizations.updateOrganization(clerkOrgId, {
+    name: details.name,
+  });
+
+  revalidatePath("/admin/settings");
+}
+
 export async function removeOrganizationLogo() {
   const { userId, orgId: clerkOrgId } = await auth();
 
