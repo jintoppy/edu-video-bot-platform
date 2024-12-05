@@ -4,33 +4,27 @@ import { useState, useCallback, useEffect } from "react"
 import { useOrganization } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { updateOrganizationLogo, removeOrganizationLogo } from "../actions"
+import { updateOrganizationLogo, removeOrganizationLogo, getOrganizationLogo } from "../actions"
 import Image from "next/image"
 import { useDropzone } from "react-dropzone"
-import { db } from "@/lib/db"
-import { organizationSettings } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
 
 export function LogoSettings() {
   const { organization } = useOrganization()
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
 
-  // Load initial logo
   useEffect(() => {
     async function loadLogo() {
       if (!organization?.id) return;
 
       try {
-        const settings = await db.query.organizationSettings.findFirst({
-          where: eq(organizationSettings.organizationId, organization.id)
-        });
-
-        if (settings?.logo) {
-          setPreview(settings.logo);
+        const logoUrl = await getOrganizationLogo();
+        if (logoUrl) {
+          setPreview(logoUrl);
         }
       } catch (error) {
         console.error('Error loading logo:', error);
+        toast.error("Failed to load logo");
       }
     }
 
