@@ -89,6 +89,20 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
   }
 }
 
+export async function getOrganizationTheme() {
+  const { orgId } = await auth();
+  
+  if (!orgId) {
+    throw new Error("Not authenticated or no organization");
+  }
+
+  const settings = await db.query.organizationSettings.findFirst({
+    where: eq(organizationSettings.organizationId, orgId)
+  });
+
+  return settings?.theme as { primaryColor: string; secondaryColor: string } | undefined;
+}
+
 export async function removeOrganizationLogo() {
   const { orgId } = await auth();
   

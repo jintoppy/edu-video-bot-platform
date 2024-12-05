@@ -6,11 +6,8 @@ import { HexColorPicker } from "react-colorful"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { updateOrganizationTheme } from "../actions"
+import { updateOrganizationTheme, getOrganizationTheme } from "../actions"
 import { toast } from "sonner"
-import { db } from "@/lib/db"
-import { organizationSettings } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
 
 export function ThemeSettings() {
   const { organization } = useOrganization()
@@ -23,17 +20,14 @@ export function ThemeSettings() {
       if (!organization?.id) return;
 
       try {
-        const settings = await db.query.organizationSettings.findFirst({
-          where: eq(organizationSettings.organizationId, organization.id)
-        });
-
-        if (settings?.theme) {
-          const theme = settings.theme as { primaryColor: string; secondaryColor: string };
+        const theme = await getOrganizationTheme();
+        if (theme) {
           setPrimaryColor(theme.primaryColor);
           setSecondaryColor(theme.secondaryColor);
         }
       } catch (error) {
         console.error('Error loading theme settings:', error);
+        toast.error("Failed to load theme settings");
       }
     }
 
