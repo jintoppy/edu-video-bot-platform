@@ -14,7 +14,12 @@ interface ThemeUpdate {
 }
 
 interface LogoUpdate {
-  file: File;
+  file: {
+    name: string;
+    type: string;
+    size: number;
+    arrayBuffer: () => Promise<ArrayBuffer>;
+  };
   orgName: string;
 }
 
@@ -96,7 +101,12 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
       .replace(/\s+/g, "-")}-${Date.now()}${file.name.substring(
       file.name.lastIndexOf(".")
     )}`;
-    const { url } = await put(`logos/${filename}`, file, { access: "public" });
+    
+    const buffer = await file.arrayBuffer();
+    const { url } = await put(`logos/${filename}`, buffer, { 
+      access: "public",
+      contentType: file.type
+    });
 
     console.log("Logo uploaded to:", url);
     // First, try to update existing settings

@@ -41,10 +41,18 @@ export function LogoSettings() {
     setLoading(true)
     try {
       // Upload to blob storage and update database
+      // Create a simplified file object with only the necessary properties
+      const fileData = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        arrayBuffer: async () => await file.arrayBuffer()
+      };
+      
       const url = await updateOrganizationLogo({ 
-        file,
+        file: fileData,
         orgName: organization.name
-      })
+      });
       
       // Update preview with the actual URL
       setPreview(url)
