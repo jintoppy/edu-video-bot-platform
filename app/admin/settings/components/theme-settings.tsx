@@ -58,10 +58,11 @@ export function ThemeSettings() {
     if (!file || !organization?.name) return;
 
     try {
-      await updateOrganizationLogo({
-        file,
-        orgName: organization.name
-      });
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('orgName', organization.name);
+      
+      await updateOrganizationLogo(formData);
       toast.success("Logo uploaded successfully");
     } catch (error) {
       console.error(error);
