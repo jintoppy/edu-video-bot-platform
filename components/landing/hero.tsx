@@ -1,9 +1,18 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+import { useOrganization } from "@/providers/organization-provider";
+
 export default function Hero() {
+  const { settings } = useOrganization();
+  
   return (
-    <section className="py-20 px-4 md:px-6 lg:px-8 bg-gradient-to-r from-primary/10 to-secondary/10">
+    <section 
+      className="py-20 px-4 md:px-6 lg:px-8"
+      style={{
+        background: `linear-gradient(to right, ${settings.theme.primaryColor}1A, ${settings.theme.secondaryColor}1A)`
+      }}
+    >
       <div className="container mx-auto text-center">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
           Revolutionize Student Counseling with AI

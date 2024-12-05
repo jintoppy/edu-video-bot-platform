@@ -61,7 +61,8 @@ export default function Header() {
       <div className="container mx-auto flex justify-between items-center gap-8">
         <Link
           href="/"
-          className="flex gap-3 items-center text-2xl font-bold text-primary"
+          className="flex gap-3 items-center text-2xl font-bold"
+          style={{ color: settings.theme.primaryColor }}
         >
           <GraduationCap className="h-6 w-6" /> EduBot AI
         </Link>

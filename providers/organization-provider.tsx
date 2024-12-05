@@ -7,7 +7,14 @@ import { createContext, useContext, ReactNode } from "react";
 interface OrganizationContextType {
   organization: Organization;
   subdomain: string;
-  settings: any; // Type this based on your settings schema
+  settings: {
+    theme: {
+      primaryColor: string;
+      secondaryColor: string;
+      accentColor: string;
+      fontFamily: string;
+    };
+  };
 }
 
 const OrganizationContext = createContext<OrganizationContextType | null>(null);
@@ -19,14 +26,15 @@ interface OrganizationProviderProps {
 
 export function OrganizationProvider({ 
   children, 
-  organization 
-}: OrganizationProviderProps) {
+  organization,
+  settings 
+}: OrganizationProviderProps & { settings: any }) {
   return (
     <OrganizationContext.Provider
       value={{
         organization,
         subdomain: organization.subdomain,
-        settings: null,
+        settings
       }}
     >
       {children}

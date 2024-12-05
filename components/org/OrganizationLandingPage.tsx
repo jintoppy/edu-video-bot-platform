@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useOrganization } from "@/providers/organization-provider";
 import Header from '@/components/landing/header';
 import Hero from '@/components/landing/hero';
 import Features from '@/components/landing/features';
