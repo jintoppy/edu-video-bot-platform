@@ -95,17 +95,21 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
   }
 
   try {
-    // Upload to blob storage
+    const file = formData.get('file') as File;
+    const orgName = formData.get('orgName') as string;
+    
+    if (!file || !orgName) {
+      throw new Error("File and organization name are required");
+    }
+
     const filename = `${orgName
       .toLowerCase()
       .replace(/\s+/g, "-")}-${Date.now()}${file.name.substring(
       file.name.lastIndexOf(".")
     )}`;
-    
-    const buffer = await file.arrayBuffer();
-    const { url } = await put(`logos/${filename}`, buffer, { 
+
+    const { url } = await put(`logos/${filename}`, file, {
       access: "public",
-      contentType: file.type
     });
 
     console.log("Logo uploaded to:", url);
