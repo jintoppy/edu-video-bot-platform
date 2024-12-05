@@ -49,10 +49,10 @@ export function LogoSettings() {
       
       // Update preview with the actual URL
       setPreview(url)
-      toast.success("Logo updated successfully")
+      toast.success("Organization logo has been updated successfully")
     } catch (error) {
-      console.error(error)
-      toast.error("Failed to update logo")
+      console.error('Error updating logo:', error)
+      toast.error("Failed to update organization logo. Please try again.")
       // Revert preview on error
       setPreview(null)
     } finally {
@@ -74,10 +74,10 @@ export function LogoSettings() {
     try {
       await removeOrganizationLogo();
       setPreview(null);
-      toast.success("Logo removed successfully");
+      toast.success("Organization logo has been removed successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to remove logo");
+      toast.error("Failed to remove organization logo. Please try again.");
     } finally {
       setLoading(false);
     }
