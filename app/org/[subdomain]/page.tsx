@@ -10,11 +10,10 @@ export default async function OrgHome({
 }: {
   params: { subdomain: string };
 }) {
-  const org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.subdomain, params.subdomain))
-    .then(res => res[0]);
+
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.subdomain, params.subdomain),
+  });
 
   if (!org) {
     notFound();
