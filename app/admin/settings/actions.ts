@@ -25,6 +25,15 @@ export async function updateOrganizationTheme(theme: ThemeUpdate) {
     throw new Error("Not authenticated or no organization");
   }
 
+  // Get organization record first
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.clerkId, orgId)
+  });
+
+  if (!org?.id) {
+    throw new Error("Organization not found");
+  }
+
   // First, try to update existing settings
   const result = await db
     .update(organizationSettings)
@@ -35,13 +44,13 @@ export async function updateOrganizationTheme(theme: ThemeUpdate) {
       },
       updatedAt: new Date()
     })
-    .where(eq(organizationSettings.organizationId, orgId))
+    .where(eq(organizationSettings.organizationId, org.id))
     .returning();
 
   // If no settings exist, create them
   if (result.length === 0) {
     await db.insert(organizationSettings).values({
-      organizationId: orgId,
+      organizationId: org.id,
       theme: {
         primaryColor: theme.primary,
         secondaryColor: theme.secondary
@@ -59,6 +68,15 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
     throw new Error("Not authenticated or no organization");
   }
 
+  // Get organization record first
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.clerkId, orgId)
+  });
+
+  if (!org?.id) {
+    throw new Error("Organization not found");
+  }
+
   try {
     // Upload to blob storage
     const filename = `${orgName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`;
@@ -71,7 +89,7 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
         logo: url,
         updatedAt: new Date()
       })
-      .where(eq(organizationSettings.organizationId, orgId))
+      .where(eq(organizationSettings.organizationId, org.id))
       .returning();
 
     // If no settings exist, create them
@@ -97,8 +115,17 @@ export async function getOrganizationTheme() {
     throw new Error("Not authenticated or no organization");
   }
 
+  // Get organization record first
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.clerkId, orgId)
+  });
+
+  if (!org?.id) {
+    throw new Error("Organization not found");
+  }
+
   const settings = await db.query.organizationSettings.findFirst({
-    where: eq(organizationSettings.organizationId, orgId)
+    where: eq(organizationSettings.organizationId, org.id)
   });
 
   return settings?.theme as { primaryColor: string; secondaryColor: string } | undefined;
