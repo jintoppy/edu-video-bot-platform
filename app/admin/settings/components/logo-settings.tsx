@@ -34,7 +34,6 @@ export function LogoSettings() {
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
     if (!file || !organization?.name) return
-
     // Show preview immediately
     const objectUrl = URL.createObjectURL(file)
     setPreview(objectUrl)

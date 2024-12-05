@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { organizationSettings, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { put } from "@vercel/blob";
+import { clerkClient } from "@/lib/clerk";
 
 interface ThemeUpdate {
   primary: string;
@@ -17,17 +18,22 @@ interface LogoUpdate {
   orgName: string;
 }
 
-
 export async function updateOrganizationTheme(theme: ThemeUpdate) {
-  const { orgId } = await auth();
-  
-  if (!orgId) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
     throw new Error("Not authenticated or no organization");
   }
 
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
   // Get organization record first
   const org = await db.query.organizations.findFirst({
-    where: eq(organizations.clerkId, orgId)
+    where: eq(organizations.id, orgId),
   });
 
   if (!org?.id) {
@@ -40,9 +46,9 @@ export async function updateOrganizationTheme(theme: ThemeUpdate) {
     .set({
       theme: {
         primaryColor: theme.primary,
-        secondaryColor: theme.secondary
+        secondaryColor: theme.secondary,
       },
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .where(eq(organizationSettings.organizationId, org.id))
     .returning();
@@ -53,8 +59,8 @@ export async function updateOrganizationTheme(theme: ThemeUpdate) {
       organizationId: org.id,
       theme: {
         primaryColor: theme.primary,
-        secondaryColor: theme.secondary
-      }
+        secondaryColor: theme.secondary,
+      },
     });
   }
 
@@ -62,15 +68,21 @@ export async function updateOrganizationTheme(theme: ThemeUpdate) {
 }
 
 export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
-  const { orgId } = await auth();
-  
-  if (!orgId) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
     throw new Error("Not authenticated or no organization");
   }
 
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
   // Get organization record first
   const org = await db.query.organizations.findFirst({
-    where: eq(organizations.clerkId, orgId)
+    where: eq(organizations.id, orgId),
   });
 
   if (!org?.id) {
@@ -79,15 +91,20 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
 
   try {
     // Upload to blob storage
-    const filename = `${orgName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`;
-    const { url } = await put(`logos/${filename}`, file, { access: 'public' });
+    const filename = `${orgName
+      .toLowerCase()
+      .replace(/\s+/g, "-")}-${Date.now()}${file.name.substring(
+      file.name.lastIndexOf(".")
+    )}`;
+    const { url } = await put(`logos/${filename}`, file, { access: "public" });
 
+    console.log("Logo uploaded to:", url);
     // First, try to update existing settings
     const result = await db
       .update(organizationSettings)
       .set({
         logo: url,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(organizationSettings.organizationId, org.id))
       .returning();
@@ -96,28 +113,34 @@ export async function updateOrganizationLogo({ file, orgName }: LogoUpdate) {
     if (result.length === 0) {
       await db.insert(organizationSettings).values({
         organizationId: orgId,
-        logo: url
+        logo: url,
       });
     }
 
     revalidatePath("/admin/settings");
     return url;
   } catch (error) {
-    console.error('Error uploading logo:', error);
-    throw new Error('Failed to upload logo');
+    console.error("Error uploading logo:", error);
+    throw new Error("Failed to upload logo");
   }
 }
 
 export async function getOrganizationTheme() {
-  const { orgId } = await auth();
-  
-  if (!orgId) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
     throw new Error("Not authenticated or no organization");
   }
 
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
   // Get organization record first
   const org = await db.query.organizations.findFirst({
-    where: eq(organizations.clerkId, orgId)
+    where: eq(organizations.id, orgId),
   });
 
   if (!org?.id) {
@@ -125,31 +148,63 @@ export async function getOrganizationTheme() {
   }
 
   const settings = await db.query.organizationSettings.findFirst({
-    where: eq(organizationSettings.organizationId, org.id)
+    where: eq(organizationSettings.organizationId, org.id),
   });
 
-  return settings?.theme as { primaryColor: string; secondaryColor: string } | undefined;
+  return settings?.theme as
+    | { primaryColor: string; secondaryColor: string }
+    | undefined;
 }
 
 export async function getOrganizationLogo() {
-  const { orgId } = await auth();
-  
-  if (!orgId) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
     throw new Error("Not authenticated or no organization");
   }
 
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  // Get organization record first
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.id, orgId),
+  });
+
+  if (!org?.id) {
+    throw new Error("Organization not found");
+  }
+
   const settings = await db.query.organizationSettings.findFirst({
-    where: eq(organizationSettings.organizationId, orgId)
+    where: eq(organizationSettings.organizationId, orgId),
   });
 
   return settings?.logo || null;
 }
 
 export async function removeOrganizationLogo() {
-  const { orgId } = await auth();
-  
-  if (!orgId) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
     throw new Error("Not authenticated or no organization");
+  }
+
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  // Get organization record first
+  const org = await db.query.organizations.findFirst({
+    where: eq(organizations.id, orgId),
+  });
+
+  if (!org?.id) {
+    throw new Error("Organization not found");
   }
 
   // Update logo to null/empty in database
@@ -157,7 +212,7 @@ export async function removeOrganizationLogo() {
     .update(organizationSettings)
     .set({
       logo: null,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .where(eq(organizationSettings.organizationId, orgId));
 
