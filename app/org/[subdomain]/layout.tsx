@@ -1,6 +1,6 @@
 import { OrganizationProvider } from "@/providers/organization-provider";
 import { db } from "@/lib/db";
-import { organizations } from "@/lib/db/schema";
+import { organizations, organizationSettings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 interface OrganizationLayoutProps {
@@ -19,21 +19,38 @@ async function getOrganization(subdomain: string) {
     return null;
   }
 
-  return org;
+  const settings = await db.query.organizationSettings.findFirst({
+    where: eq(organizationSettings.organizationId, org.id),
+  });
+
+  return {
+    organization: org,
+    settings: settings || {
+      theme: {
+        primaryColor: "#3B82F6",
+        secondaryColor: "#10B981",
+        accentColor: "#6366F1",
+        fontFamily: "Inter"
+      }
+    }
+  };
 }
 
 export default async function OrganizationLayout({
   children,
   params,
 }: OrganizationLayoutProps) {
-  const organization = await getOrganization(params.subdomain);
+  const result = await getOrganization(params.subdomain);
 
-  if (!organization) {
+  if (!result) {
     return null; // or handle 404
   }
 
   return (
-    <OrganizationProvider organization={organization}>
+    <OrganizationProvider 
+      organization={result.organization}
+      settings={result.settings}
+    >
       {children}
     </OrganizationProvider>
   );
