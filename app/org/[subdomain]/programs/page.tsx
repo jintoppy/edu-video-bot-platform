@@ -1,5 +1,5 @@
 import { ProgramsGrid } from "@/components/programs/programs-grid"
-import { getOrganizationBySubdomain } from "@/lib/organizations";
+import { getOrganizationBySubdomain } from "@/actions/programs";
 
 export default async function DashboardProgramsPage({
   params
