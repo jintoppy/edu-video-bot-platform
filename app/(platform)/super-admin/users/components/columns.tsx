@@ -17,12 +17,12 @@ export type User = {
   name: string;
   email: string;
   role: string;
-  organizationId: string;
+  organizationId: string | null;
   organization: {
     id: string;
     name: string;
   } | null;
-  createdAt: string;
+  createdAt: Date | null;
 };
 
 export const columns: ColumnDef<User>[] = [

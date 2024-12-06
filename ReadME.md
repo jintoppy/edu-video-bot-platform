@@ -93,6 +93,6 @@ For any questions or issues, please open a GitHub issue or contact the developme
 ## Test users 
 
 Org Admin: 
-blossomadmin@mailto.plus
+ideaadmin@mailto.plus
 Ljs8#23$
 

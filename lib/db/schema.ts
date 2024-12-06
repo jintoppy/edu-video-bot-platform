@@ -402,3 +402,4 @@ export type MessageType = typeof messageTypeEnum.enumValues;
 export type UserRole = typeof userRoleEnum.enumValues;
 export type EnrollmentStatus = typeof enrollmentStatusEnum.enumValues;
 export type Organization = InferSelectModel<typeof organizations>
+export type LandingPage = InferSelectModel<typeof landingPages>;

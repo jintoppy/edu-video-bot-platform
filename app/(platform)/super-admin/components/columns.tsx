@@ -16,8 +16,8 @@ export type Organization = {
   id: string;
   name: string;
   subdomain: string;
-  status: "active" | "pending" | "inactive";
-  createdAt: string;
+  status: "active" | "pending" | "inactive" | "suspended";
+  createdAt: Date | null;
 };
 
 export const columns: ColumnDef<Organization>[] = [

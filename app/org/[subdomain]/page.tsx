@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { landingPages, organizations } from "@/lib/db/schema";
+import { LandingPage, landingPages, organizations } from "@/lib/db/schema";
 import OrganizationLandingPage from "@/components/org/OrganizationLandingPage";
 
 export default async function OrgHome({
@@ -13,6 +13,7 @@ export default async function OrgHome({
 
   console.log('params.subdomain', params.subdomain);
 
+  let landingPage: LandingPage | undefined | null = undefined;
   try {
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.subdomain, params.subdomain),
@@ -24,7 +25,7 @@ export default async function OrgHome({
       notFound();
     }
 
-    const landingPage = await db.query.landingPages.findFirst({
+    landingPage = await db.query.landingPages.findFirst({
       where: eq(landingPages.organizationId, org.id),
     });
 

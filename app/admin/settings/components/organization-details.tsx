@@ -8,11 +8,19 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { updateOrganizationDetails, getOrganizationDetails } from "../actions"
 
+type OrgDetails = {
+  name: string,
+  subdomain: string,
+  phone: string,
+  address: any,
+  email: string
+}
+
 export function OrganizationDetails() {
   const { toast } = useToast()
   const { organization } = useOrganization()
   const [loading, setLoading] = useState(true)
-  const [details, setDetails] = useState({
+  const [details, setDetails] = useState<OrgDetails>({
     name: '',
     subdomain: '',
     phone: '',

@@ -1,26 +1,27 @@
-import { Inter } from 'next/font/google'
+import { Inter } from "next/font/google";
 // import { Analytics } from '@vercel/analytics/react'
-import { ClerkProvider } from '@clerk/nextjs'
-import { ThemeProvider } from '@/components/theme-provider'
-import { Toaster } from '@/components/ui/toaster'
-import './globals.css'
+import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import "./globals.css";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: 'EduBot - AI-Powered International Education Counseling',
-  description: 'Get personalized education guidance through AI-powered video interactions',
-}
+  title: "EduBot - AI-Powered International Education Counseling",
+  description:
+    "Get personalized education guidance through AI-powered video interactions",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ClerkProvider>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -31,8 +32,8 @@ export default function RootLayout({
             <Toaster />
           </ThemeProvider>
           {/* <Analytics /> */}
-        </ClerkProvider>
-      </body>
-    </html>
-  )
+        </body>
+      </html>
+    </ClerkProvider>
+  );
 }

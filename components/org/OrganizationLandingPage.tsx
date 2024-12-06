@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { db } from "@/lib/db";
-import { landingPages } from "@/lib/db/schema";
+import { LandingPage, landingPages } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import Header from '@/components/landing/header';
 import Hero from '@/components/landing/hero';
@@ -19,14 +19,18 @@ const SECTION_COMPONENTS = {
 };
 
 interface OrganizationLandingPageProps {
-  organizationId: string;
+  landingPage?: LandingPage | null;
 }
 
-export default async function OrganizationLandingPage({ organizationId }: OrganizationLandingPageProps) {
+export default function OrganizationLandingPage({ landingPage }: OrganizationLandingPageProps) {
+  if(!landingPage){
+    return null;
+  }
+
   // Fetch landing page configuration from the database
-  const landingPage = await db.query.landingPages.findFirst({
-    where: eq(landingPages.organizationId, organizationId),
-  });
+  
+
+  console.log(landingPage);
 
   // If no configuration found, show default layout
   const sections = landingPage?.sections || [];

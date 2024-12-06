@@ -1,6 +1,6 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
-import { WebhookEvent } from '@clerk/nextjs/server'
+import { UserJSON, WebhookEvent } from '@clerk/nextjs/server'
 import { db } from "@/lib/db";
 import { users, organizationInvitations, organizations } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -48,11 +48,12 @@ export async function POST(req: Request) {
     })
   }
 
-  const { id } = evt.data
+  
   const eventType = evt.type
   if (evt.type === 'user.created') {
-    const primaryEmailAddress = evt.data.email_addresses.find(
-      email => email.id === evt.data.primary_email_address_id
+    const { id, email_addresses, primary_email_address_id, first_name, last_name } = evt.data;
+    const primaryEmailAddress = email_addresses.find(
+      email => email.id === primary_email_address_id
     )?.email_address;
 
     if (!primaryEmailAddress) {
@@ -69,35 +70,37 @@ export async function POST(req: Request) {
       // Update existing user with clerkId
       await db.update(users)
         .set({ 
-          clerkId: evt.data.id,
+          clerkId: id,
           updatedAt: new Date()
         })
         .where(eq(users.email, primaryEmailAddress));
     } else {
       // Create new user
       await db.insert(users).values({
-        clerkId: evt.data.id,
+        clerkId: id,
         email: primaryEmailAddress,
-        fullName: `${evt.data.first_name} ${evt.data.last_name}`
+        fullName: `${first_name} ${last_name}`
       });
     }
   }
 
   if (evt.type === 'organizationInvitation.accepted') {
     const invitation = evt.data;
-    const { organization_id, private_metadata, role } = invitation;
+    const { organization_id, public_metadata, role } = invitation;
     
     if (!organization_id) {
       console.error('No orgId found in invitation metadata');
       return new Response('Error: No organization ID found', { status: 400 });
     }
 
+    console.log(invitation);
+
     // Add the user to users table
-    await db.insert(users).values({
-      email: private_metadata.adminEmail as string,
-      fullName: private_metadata.adminName,
-      role,
-      organizationId: organization_id,
+    await db.insert(users).values({            
+      role: role as 'org:admin' | 'org:member',
+      organizationId: public_metadata.orgId as string,
+      email: public_metadata.adminEmail as string,
+      fullName: public_metadata.adminName as string,
     });
 
     // Update organization invitation status
@@ -118,6 +121,8 @@ export async function POST(req: Request) {
 
     console.log('Updated organization, invitation status and created user');
   }
+
+  const { id } = evt.data
   console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
   console.log('Webhook payload:', body)
 

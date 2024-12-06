@@ -16,7 +16,7 @@ export async function POST(req: Request) {
           clerkId,
           email,
           fullName,
-          role: 'counselor',
+          role: 'org:member',
         })
         .returning();
 

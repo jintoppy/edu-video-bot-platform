@@ -41,19 +41,19 @@ export default async function UserDetailsPage({
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Role</label>
                 <div className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                  ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                    user.role === 'counselor' ? 'bg-blue-100 text-blue-800' : 
+                  ${user.role === 'org:admin' ? 'bg-purple-100 text-purple-800' : 
+                    user.role === 'org:member' ? 'bg-blue-100 text-blue-800' : 
                     'bg-green-100 text-green-800'}`}>
                   {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                 </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Created At</label>
-                <p className="mt-1">{new Date(user.createdAt).toLocaleDateString()}</p>
+                <p className="mt-1">{user.createdAt && new Date(user.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
-                <p className="mt-1">{new Date(user.updatedAt).toLocaleDateString()}</p>
+                <p className="mt-1">{user.updatedAt && new Date(user.updatedAt).toLocaleDateString()}</p>
               </div>
             </div>
           </CardContent>
@@ -87,17 +87,7 @@ export default async function UserDetailsPage({
             )}
           </CardContent>
         </Card>
-
-        {user.metadata && (
-          <Card className="md:col-span-2">
-            <CardHeader className="text-lg font-semibold">Additional Information</CardHeader>
-            <CardContent>
-              <pre className="bg-muted p-4 rounded-lg overflow-auto">
-                {JSON.stringify(user.metadata, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        )}
+       
       </div>
 
       <div className="mt-8">
