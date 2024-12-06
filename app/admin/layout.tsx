@@ -53,6 +53,12 @@ const routes = [
     color: "text-violet-500",
   },
   {
+    label: 'Page Builder',
+    icon: Files,
+    href: '/admin/page-builder',
+    color: "text-violet-500",
+  },
+  {
     label: 'Settings',
     icon: Settings,
     href: '/admin/settings',

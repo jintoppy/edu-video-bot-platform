@@ -24,30 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, GraduationCap, Clock, Video } from "lucide-react";
 import Link from "next/link";
-
-// Types
-interface Program {
-  id: string;
-  universityId: string;
-  name: string;
-  level: string;
-  duration: string;
-  tuitionFee: number;
-  currency: string;
-  country: string;
-  eligibilityCriteria: {
-    academicRequirements?: string[];
-    languageRequirements?: {
-      test: string;
-      minimumScore: number;
-    }[];
-    workExperience?: string;
-  };
-  description: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Program } from "@/types";
 
 type ProgramCardProps = {
   program: Program;
@@ -270,18 +247,31 @@ export const ProgramsGrid = ({ programs }: ProgramsGridProps) => {
 
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {programs.map((program) => (
-        <ProgramCard
-          key={program.id}
-          program={
-            selectedProgram?.id === program.id ? selectedProgram : program
-          }
-          onViewDetails={handleViewDetails}
-          handleEnroll={handleEnroll}
-          enrolling={enrolling}
-        />
-      ))}
+    <div className="flex-1 min-h-[calc(100vh-theme(spacing.16)-theme(spacing.20))]">
+      {programs.length === 0 ? (
+        <div className="h-full flex flex-col items-center justify-center text-center p-8">
+          <div className="max-w-md space-y-4">
+            <h3 className="text-2xl font-semibold">No Programs Available</h3>
+            <p className="text-muted-foreground">
+              There are currently no programs listed for this organization. Please check back later or contact the organization directly for more information.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {programs.map((program) => (
+            <ProgramCard
+              key={program.id}
+              program={
+                selectedProgram?.id === program.id ? selectedProgram : program
+              }
+              onViewDetails={handleViewDetails}
+              handleEnroll={handleEnroll}
+              enrolling={enrolling}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const AVAILABLE_SECTIONS = [
   { id: 'hero', label: 'Hero Section', type: 'hero' },

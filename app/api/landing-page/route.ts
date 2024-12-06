@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { landingPages } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { checkAuth } from "@/lib/auth/utils";
+import { checkAuth } from "@/lib/checkAuth";
 
 export async function GET() {
   const authResult = await checkAuth();

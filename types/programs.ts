@@ -200,3 +200,26 @@ export interface ProgramEligibilityForm {
   };
 }
 
+export interface Program {
+  id: string;
+  universityId: string;
+  name: string;
+  level: string;
+  duration: string;
+  tuitionFee: number;
+  currency: string;
+  country: string;
+  organizationId: string;
+  eligibilityCriteria: {
+    academic: AcademicRequirements;
+    language: LanguageRequirements;
+    professional?: ProfessionalRequirements;
+    standardizedTests?: StandardizedTestRequirements;
+    additional: AdditionalRequirements;
+    specialConditions?: SpecialConditions;
+  };
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

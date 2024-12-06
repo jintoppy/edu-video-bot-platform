@@ -16,6 +16,7 @@
     "@clerk/clerk-react": "^5.17.0",
     "@clerk/nextjs": "^6.5.0",
     "@deepgram/sdk": "^3.9.0",
+    "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^3.9.1",
     "@langchain/anthropic": "^0.3.8",
     "@langchain/community": "^0.3.15",

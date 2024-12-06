@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
   const conditions = [
     eq(programs.isActive, true),
-    eq(programs.orgId, orgId)
+    eq(programs.organizationId, orgId)
   ];
 
   if (country) conditions.push(eq(programs.country, country));
