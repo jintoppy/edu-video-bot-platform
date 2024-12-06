@@ -5,25 +5,26 @@ import { db } from "@/lib/db";
 import { studentProfiles, programs, chatSessions } from "@/lib/db/schema";
 
 export async function GET(req: Request) {
-  const authResult = await checkAuth();
-  if (authResult.error || !authResult.user) {
-    return NextResponse.json(authResult, { status: 401 });
-  }
-
   const { searchParams } = new URL(req.url);
   const country = searchParams.get("country");
   const level = searchParams.get("level");
+  const orgId = searchParams.get("orgId");
 
-  const conditions = [eq(programs.isActive, true)];
+  if (!orgId) {
+    return NextResponse.json({ error: "Organization ID is required" }, { status: 400 });
+  }
+
+  const conditions = [
+    eq(programs.isActive, true),
+    eq(programs.orgId, orgId)
+  ];
 
   if (country) conditions.push(eq(programs.country, country));
   if (level) conditions.push(eq(programs.level, level));
 
   const query = db.select().from(programs).where(and(...conditions));
-  //const query = db.select()
-
   const results = await query;
-  console.log(results);
+  
   return NextResponse.json(results);
 }
 
