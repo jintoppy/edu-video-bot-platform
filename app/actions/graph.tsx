@@ -121,7 +121,7 @@ async function chat(
         uiStream,
         metadata: {
           userId,
-          sessionId,
+          sessionId: sessionId || '',
         },
       },
       {
