@@ -2,6 +2,9 @@
   "name": "edu-video-bot",
   "version": "0.1.0",
   "private": true,
+  "resolutions": {
+    "@clerk/types": "3.65.4"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
