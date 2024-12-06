@@ -51,21 +51,54 @@ export async function POST(req: Request) {
   const { id } = evt.data
   const eventType = evt.type
   if (evt.type === 'user.created') {
-    console.log('userId:', evt.data);
-    await db.insert(users).values({
-        clerkId: evt.data.id,
-        email: evt.data.email_addresses[0].email_address,
-        fullName: `${evt.data.first_name} ${evt.data.last_name}`
+    const primaryEmailAddress = evt.data.email_addresses.find(
+      email => email.id === evt.data.primary_email_address_id
+    )?.email_address;
+
+    if (!primaryEmailAddress) {
+      console.error('No primary email address found');
+      return new Response('Error: No primary email address found', { status: 400 });
+    }
+
+    // Check if user already exists
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, primaryEmailAddress)
     });
+
+    if (existingUser) {
+      // Update existing user with clerkId
+      await db.update(users)
+        .set({ 
+          clerkId: evt.data.id,
+          updatedAt: new Date()
+        })
+        .where(eq(users.email, primaryEmailAddress));
+    } else {
+      // Create new user
+      await db.insert(users).values({
+        clerkId: evt.data.id,
+        email: primaryEmailAddress,
+        fullName: `${evt.data.first_name} ${evt.data.last_name}`
+      });
+    }
   }
+
   if (evt.type === 'organizationInvitation.accepted') {
     const invitation = evt.data;
-    const { organization_id } = invitation;
+    const { organization_id, public_metadata } = invitation;
     
     if (!organization_id) {
       console.error('No orgId found in invitation metadata');
-      return;
+      return new Response('Error: No organization ID found', { status: 400 });
     }
+
+    // Add the user to users table
+    await db.insert(users).values({
+      email: public_metadata.adminEmail,
+      fullName: public_metadata.adminName,
+      role: invitation.role,
+      organizationId: organization_id,
+    });
 
     // Update organization invitation status
     await db.update(organizationInvitations)
@@ -81,9 +114,9 @@ export async function POST(req: Request) {
         status: "active",
         updatedAt: new Date()
       })
-      .where(eq(organizations.id, organization_id as string));
+      .where(eq(organizations.id, organization_id));
 
-    console.log('Updated organization and invitation status');
+    console.log('Updated organization, invitation status and created user');
   }
   console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
   console.log('Webhook payload:', body)
