@@ -23,11 +23,26 @@ export default function Hero() {
           personalized guidance for international education.
         </p>
         <Link href="/sign-up">
-          <Button size="lg" className="mr-4">
+          <Button 
+            size="lg" 
+            className="mr-4"
+            style={{ 
+              backgroundColor: settings.theme.primaryColor,
+              color: 'white',
+              border: 'none'
+            }}
+          >
             Try It Now
           </Button>
         </Link>
-        <Button size="lg" variant="outline">
+        <Button 
+          size="lg" 
+          variant="outline"
+          style={{ 
+            borderColor: settings.theme.primaryColor,
+            color: settings.theme.primaryColor
+          }}
+        >
           Learn More
         </Button>
       </div>
