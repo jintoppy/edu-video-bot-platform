@@ -85,7 +85,7 @@ export async function POST(req: Request) {
 
   if (evt.type === 'organizationInvitation.accepted') {
     const invitation = evt.data;
-    const { organization_id, public_metadata } = invitation;
+    const { organization_id, private_metadata, role } = invitation;
     
     if (!organization_id) {
       console.error('No orgId found in invitation metadata');
@@ -94,9 +94,9 @@ export async function POST(req: Request) {
 
     // Add the user to users table
     await db.insert(users).values({
-      email: public_metadata.adminEmail,
-      fullName: public_metadata.adminName,
-      role: invitation.role,
+      email: private_metadata.adminEmail as string,
+      fullName: private_metadata.adminName,
+      role,
       organizationId: organization_id,
     });
 

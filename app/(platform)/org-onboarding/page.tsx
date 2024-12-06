@@ -18,6 +18,8 @@ export default function OrgOnboardingPage() {
   const [password, setPassword] = React.useState('')
   const [loading, setLoading] = React.useState(false)
 
+  console.log('organization', organization);
+
   // Get the token and account status from the query params
   const searchParams = useSearchParams()
   const token = searchParams.get('__clerk_ticket')

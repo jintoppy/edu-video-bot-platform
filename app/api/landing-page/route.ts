@@ -13,6 +13,7 @@ export async function GET() {
   try {
     // Get organization ID from authenticated user
     const orgId = authResult.user.organizationId;
+    console.log(orgId, 'orgId');
     if (!orgId) {
       return NextResponse.json(
         { error: "No organization found for user" },
@@ -23,7 +24,7 @@ export async function GET() {
     // Fetch landing page configuration
     const landingPage = await db.query.landingPages.findFirst({
       where: eq(landingPages.organizationId, orgId),
-    });
+    });    
 
     return NextResponse.json(landingPage || { sections: [], isPublished: false });
   } catch (error) {

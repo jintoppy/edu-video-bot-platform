@@ -166,7 +166,7 @@ export const landingPages = pgTable("landing_pages", {
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id").references(() => organizations.id),  // Optional for platform-level users
-  clerkId: text("clerk_id").notNull().unique(),
+  clerkId: text("clerk_id").unique(),
   email: text("email").notNull(),
   fullName: text("full_name").notNull(),
   role: userRoleEnum("userRole").notNull().default('student'),
