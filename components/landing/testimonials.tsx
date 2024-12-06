@@ -1,5 +1,6 @@
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useOrganization } from "@/providers/organization-provider";
 
 const testimonials = [
   {
@@ -23,8 +24,16 @@ const testimonials = [
 ]
 
 export default function Testimonials() {
+  const { settings } = useOrganization();
+  
   return (
-    <section id="testimonials" className="py-20 px-4 md:px-6 lg:px-8">
+    <section 
+      id="testimonials" 
+      className="py-20 px-4 md:px-6 lg:px-8"
+      style={{
+        background: `linear-gradient(to right, ${settings.theme.primaryColor}0A, ${settings.theme.secondaryColor}0A)`
+      }}
+    >
       <div className="container mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What People Are Saying</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -38,7 +47,12 @@ export default function Testimonials() {
                   <AvatarFallback>{testimonial.avatar}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">{testimonial.name}</p>
+                  <p 
+                    className="font-semibold"
+                    style={{ color: settings.theme.primaryColor }}
+                  >
+                    {testimonial.name}
+                  </p>
                   <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
               </CardFooter>
