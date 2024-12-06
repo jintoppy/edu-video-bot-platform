@@ -207,10 +207,11 @@ const ProgramCard: FC<ProgramCardProps> = ({
   );
 };
 
-export const ProgramsGrid = () => {
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface ProgramsGridProps {
+  programs: Program[];
+}
+
+export const ProgramsGrid = ({ programs }: ProgramsGridProps) => {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const { toast } = useToast();
@@ -267,34 +268,6 @@ export const ProgramsGrid = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const response = await fetch("/api/programs");
-        if (!response.ok) {
-          throw new Error("Failed to fetch programs");
-        }
-        const data = await response.json();
-        setPrograms(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch programs"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPrograms();
-  }, []);
-
-  if (loading) {
-    return <div>Loading programs...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
