@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useOrganization } from "@/providers/organization-provider";

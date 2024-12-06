@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { UserButton } from "@clerk/nextjs";
 import { getUserRole } from "@/app/actions/user";
+import { useOrganization } from "@/providers/organization-provider";
 
 export default function Header() {
   const { isSignedIn, user } = useUser();
   const [dashboardUrl, setDashboardUrl] = useState("");
+  const {settings} = useOrganization();
 
   useEffect(() => {
     const getDashboardUrl = async () => {
@@ -18,9 +20,9 @@ export default function Header() {
       }
       const userRole = await getUserRole(user?.id);
 
-      if (userRole === "admin") {
+      if (userRole === "org:admin") {
         setDashboardUrl("/admin");
-      } else if (userRole === "counselor") {
+      } else if (userRole === "org:member") {
         setDashboardUrl("/counselor");
       } else {
         setDashboardUrl("/dashboard");

@@ -89,3 +89,10 @@ For any questions or issues, please open a GitHub issue or contact the developme
 ## License
 
 [Add your license information here]
+
+## Test users 
+
+Org Admin: 
+blossomadmin@mailto.plus
+Ljs8#23$
+
