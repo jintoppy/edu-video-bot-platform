@@ -13,24 +13,29 @@ export default async function OrgHome({
 
   console.log('params.subdomain', params.subdomain);
 
-  const org = await db.query.organizations.findFirst({
-    where: eq(organizations.subdomain, params.subdomain),
-  });
+  try {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.subdomain, params.subdomain),
+    });
 
-  console.log('org', org);
+    console.log('org', org);
 
-  if (!org) {
-    notFound();
-  }
+    if (!org) {
+      notFound();
+    }
 
-  const landingPage = await db.query.landingPages.findFirst({
-    where: eq(landingPages.organizationId, org.id),
-  });
+    const landingPage = await db.query.landingPages.findFirst({
+      where: eq(landingPages.organizationId, org.id),
+    });
 
-  console.log('landingPage', landingPage)
+    console.log('landingPage', landingPage)
 
-  if(!landingPage) {
-    notFound();
+    if(!landingPage) {
+      notFound();
+    }
+  } catch (error) {
+    console.error('Error fetching organization data:', error);
+    throw new Error('Failed to load organization data');
   }
 
   const user = await currentUser();
@@ -41,9 +46,9 @@ export default async function OrgHome({
 
   switch (user.publicMetadata.role) {
     case "student":
-      redirect("/dashboard");
+      redirect(`/org/${params.subdomain}/dashboard`);
     case "counselor":
-      redirect("/counselor/dashboard");
+      redirect(`/org/${params.subdomain}/counselor/dashboard`);
     default:
       return <OrganizationLandingPage landingPage={landingPage} />
   }
