@@ -13,7 +13,8 @@ const isPublicRoute = createRouteMatcher([
   '/org-onboarding',
   '/org/:subdomain',
   '/org/:subdomain/programs',
-  '/api/programs'
+  '/api/programs',
+  '/api/v1/sdk/(.*)'
 ]);
 
 async function handleRequest(auth: any, request: NextRequest) {
@@ -22,6 +23,7 @@ async function handleRequest(auth: any, request: NextRequest) {
     if (request.method === 'OPTIONS') {
       return handleOptions(request);
     }
+    console.log(request.method, 'request.method');
     return sdkCorsMiddleware(request);
   }
 

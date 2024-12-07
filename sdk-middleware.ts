@@ -1,9 +1,6 @@
 // src/middleware/sdk-cors.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
-import { apiKeys } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 
 export async function sdkCorsMiddleware(request: NextRequest) {
   // Only handle SDK API routes
@@ -18,63 +15,16 @@ export async function sdkCorsMiddleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get API key from headers
-  const apiKey = request.headers.get('x-api-key');
-  if (!apiKey) {
-    return new NextResponse(null, {
-      status: 401,
-      statusText: 'Missing API key'
-    });
-  }
+  // Create response and set CORS headers
+  const response = NextResponse.next();
 
-  try {
-    // Check if API key exists and get allowed domains
-    const keyDetails = await db.query.apiKeys.findFirst({
-      where: eq(apiKeys.key, apiKey)
-    });
+  // Set CORS headers
+  response.headers.set('Access-Control-Allow-Origin', origin);
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
 
-    if (!keyDetails) {
-      return new NextResponse(null, {
-        status: 401,
-        statusText: 'Invalid API key'
-      });
-    }
-
-    // Check if domain is allowed
-    const allowedDomains = keyDetails.allowedDomains as string[];
-    const isAllowedDomain = allowedDomains.some(domain => {
-      if (domain === '*') return true;
-      if (domain.startsWith('*.')) {
-        const wildCardDomain = domain.slice(2);
-        return origin.endsWith(wildCardDomain);
-      }
-      return origin === domain;
-    });
-
-    if (!isAllowedDomain) {
-      return new NextResponse(null, {
-        status: 403,
-        statusText: 'Domain not allowed'
-      });
-    }
-
-    // Create response and set CORS headers
-    const response = NextResponse.next();
-
-    // Set CORS headers
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-
-    return response;
-  } catch (error) {
-    console.error('SDK CORS middleware error:', error);
-    return new NextResponse(null, {
-      status: 500,
-      statusText: 'Internal server error'
-    });
-  }
+  return response;
 }
 
 // Handle OPTIONS requests
