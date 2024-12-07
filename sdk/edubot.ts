@@ -36,7 +36,7 @@ export class EduBot {
 
   constructor(config: EduBotConfig) {
     this.config = {
-      baseUrl: 'https://api.edubot.com',
+      baseUrl: 'http://localhost:3000',
       ...config
     };
     this.api = createApiClient(config.apiKey, config.baseUrl);

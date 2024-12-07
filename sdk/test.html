@@ -10,10 +10,13 @@
     <script>
         // Initialize the SDK
         const eduBot = new EduBot({
-            apiKey: 'EDU_xxxxxxxxxxxx',
-            autoInit: true, // Shows chat button automatically
-            position: 'bottom-right',
-            defaultOpen: false // Don't open chat automatically
+            apiKey: 'EDU_xxxxxxxxxxxx'
+        });
+
+        eduBot.initWidget({
+            greeting: "👋 Need help choosing a program?",
+            autoOpen: false,
+            delay: 2000
         });
 
     </script>

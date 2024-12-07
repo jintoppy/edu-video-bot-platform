@@ -1,6 +1,8 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { sdkCorsMiddleware, handleOptions } from './sdk-middleware';
+
 
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)', 
@@ -14,15 +16,23 @@ const isPublicRoute = createRouteMatcher([
   '/api/programs'
 ]);
 
-export default clerkMiddleware(async (auth, request) => {
+async function handleRequest(auth: any, request: NextRequest) {
+  // Handle SDK CORS for /api/v1/sdk routes first
+  if (request.nextUrl.pathname.startsWith('/api/v1/sdk')) {
+    if (request.method === 'OPTIONS') {
+      return handleOptions(request);
+    }
+    return sdkCorsMiddleware(request);
+  }
+
   const url = new URL(request.url);
   const hostname = request.headers.get('host') || '';
   const subdomain = hostname.split('.')[0];
   
-  // Skip subdomain check for assets and API routes
+  // Skip subdomain check for assets and non-SDK API routes
   if (
     url.pathname.startsWith('/_next') || 
-    url.pathname.startsWith('/api') ||
+    (url.pathname.startsWith('/api') && !url.pathname.startsWith('/api/v1/sdk')) ||
     url.pathname.startsWith('/static')
   ) {
     return NextResponse.next();
@@ -30,8 +40,6 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Handle subdomain routing for organizations
   if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'localhost:3000') {
-    // Rewrite URL for organization-specific pages
-    // This will route to a catch-all page that handles org-specific content
     const newUrl = new URL(`/org/${subdomain}${url.pathname}`, request.url);
     return NextResponse.rewrite(newUrl);
   }
@@ -44,7 +52,10 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   return NextResponse.next();
-});
+}
+
+export default clerkMiddleware((auth, request) => handleRequest(auth, request));
+
 
 export const config = {
   matcher: [

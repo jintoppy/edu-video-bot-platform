@@ -6,7 +6,7 @@ export class ApiClient {
   private apiKey: string;
   private baseUrl: string;
 
-  constructor(apiKey: string, baseUrl: string = 'https://api.edubot.com') {
+  constructor(apiKey: string, baseUrl: string = 'http://localhost:3000') {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
   }
@@ -49,7 +49,7 @@ export class ApiClient {
   async initializeChat(
     options: ChatOptions = {}
   ): Promise<ApiResponse<InitResponse>> {
-    return this.request<InitResponse>('/v1/sdk/chat/init', {
+    return this.request<InitResponse>('/api/v1/sdk/chat/init', {
       method: 'POST',
       body: JSON.stringify({
         programId: options.programId,
@@ -64,7 +64,7 @@ export class ApiClient {
     message: string,
     metadata?: Record<string, any>
   ): Promise<ChatResponse> {
-    const response = await this.request<ChatResponse>('/v1/sdk/chat/message', {
+    const response = await this.request<ChatResponse>('/api/v1/sdk/chat/message', {
       method: 'POST',
       body: JSON.stringify({
         sessionId,
@@ -85,14 +85,14 @@ export class ApiClient {
   }
 
   async endSession(sessionId: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/v1/sdk/chat/${sessionId}/end`, {
+    return this.request<void>(`/api/v1/sdk/chat/${sessionId}/end`, {
       method: 'POST',
     });
   }
 
   // Add the saveSessionState method
   async saveSessionState(sessionId: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/v1/sdk/chat/${sessionId}/state`, {
+    return this.request<void>(`/api/v1/sdk/chat/${sessionId}/state`, {
       method: 'POST',
       body: JSON.stringify({
         sessionId,
@@ -102,7 +102,7 @@ export class ApiClient {
   }
 
   async validateSession(sessionId: string): Promise<ApiResponse<boolean>> {
-    return this.request<boolean>(`/v1/sdk/chat/${sessionId}/validate`, {
+    return this.request<boolean>(`/api/v1/sdk/chat/${sessionId}/validate`, {
       method: 'GET',
     });
   }
@@ -118,7 +118,7 @@ export class ApiClient {
     });
 
     return this.request<{ messages: ChatMessage[] }>(
-      `/v1/sdk/chat/${sessionId}/history?${params}`,
+      `/api/v1/sdk/chat/${sessionId}/history?${params}`,
       {
         method: 'GET',
       }
