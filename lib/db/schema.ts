@@ -395,7 +395,7 @@ export const apiKeys = pgTable("api_keys", {
   // API Key details
   name: text("name").notNull(),
   key: text("key").notNull().unique(), // Hashed API key
-  prefix: text("prefix").notNull().unique(), // Visible part of the key (e.g., EDU_xxxx)
+  prefix: text("prefix").notNull(), // Visible part of the key (e.g., EDU_xxxx)
 
   // Security settings
   allowedDomains: jsonb("allowed_domains").$type<string[]>(), // List of domains that can use this key

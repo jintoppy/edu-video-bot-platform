@@ -3,14 +3,22 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { organizationSettings, organizations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { organizationSettings, organizations, apiKeys } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { put } from "@vercel/blob";
 import { clerkClient } from "@/lib/clerk";
+import { randomUUID } from "crypto";
 
 interface ThemeUpdate {
   primary: string;
   secondary: string;
+}
+
+interface ApiKeyCreate {
+  name: string;
+  allowedDomains?: string[];
+  allowedIps?: string[];
+  monthlyQuota?: number;
 }
 
 export async function updateOrganizationTheme(theme: ThemeUpdate) {
@@ -295,6 +303,92 @@ export async function removeOrganizationLogo() {
       updatedAt: new Date(),
     })
     .where(eq(organizationSettings.organizationId, orgId));
+
+  revalidatePath("/admin/settings");
+}
+
+export async function createApiKey(data: ApiKeyCreate) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
+    throw new Error("Not authenticated or no organization");
+  }
+
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  // Generate a random API key with prefix
+  const prefix = "EDU";
+  const randomKey = randomUUID().replace(/-/g, "");
+  const key = `${prefix}_${randomKey}`;
+
+  // Insert the new API key
+  const [newKey] = await db.insert(apiKeys).values({
+    organizationId: orgId,
+    name: data.name,
+    key: key, // In production, you should hash this
+    prefix: `${prefix}_****`,
+    allowedDomains: data.allowedDomains,
+    allowedIps: data.allowedIps,
+    monthlyQuota: data.monthlyQuota,
+    createdBy: userId,
+    updatedBy: userId,
+  }).returning();
+
+  revalidatePath("/admin/settings");
+
+  return {
+    ...newKey,
+    key // Return the full key only once
+  };
+}
+
+export async function getApiKeys() {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
+    throw new Error("Not authenticated or no organization");
+  }
+
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  // Get all API keys for the organization
+  const keys = await db.query.apiKeys.findMany({
+    where: eq(apiKeys.organizationId, orgId),
+    orderBy: (apiKeys, { desc }) => [desc(apiKeys.createdAt)],
+  });
+
+  return keys;
+}
+
+export async function deleteApiKey(keyId: string) {
+  const { userId, orgId: clerkOrgId } = await auth();
+
+  if (!clerkOrgId || !userId) {
+    throw new Error("Not authenticated or no organization");
+  }
+
+  const clerkOrg = await clerkClient.organizations.getOrganization({
+    organizationId: clerkOrgId,
+  });
+
+  const orgId = clerkOrg.privateMetadata.orgId as string;
+
+  // Delete the API key
+  await db.delete(apiKeys)
+    .where(
+      and(
+        eq(apiKeys.id, keyId),
+        eq(apiKeys.organizationId, orgId)
+      )
+    );
 
   revalidatePath("/admin/settings");
 }

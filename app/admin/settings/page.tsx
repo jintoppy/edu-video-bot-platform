@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSettings } from "./components/theme-settings";
 import { LogoSettings } from "./components/logo-settings";
 import { OrganizationDetails } from "./components/organization-details";
+import { ApiKeySettings } from "./components/api-key-settings";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { DashboardHeader } from "@/components/dashboard/header";
 
@@ -38,6 +39,7 @@ export default function SettingsPage() {
             <TabsTrigger value="organization">Organization</TabsTrigger>
             <TabsTrigger value="theme">Theme</TabsTrigger>
             <TabsTrigger value="logo">Logo</TabsTrigger>
+            <TabsTrigger value="api-keys">API Keys</TabsTrigger>
           </TabsList>
           <TabsContent value="organization">
             <Card>
@@ -75,6 +77,19 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <LogoSettings />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="api-keys">
+            <Card>
+              <CardHeader>
+                <CardTitle>API Keys</CardTitle>
+                <CardDescription>
+                  Manage API keys for accessing your organization&apos;s services
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ApiKeySettings />
               </CardContent>
             </Card>
           </TabsContent>
