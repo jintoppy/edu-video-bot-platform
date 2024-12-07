@@ -15,6 +15,13 @@
       "when": 1733456029653,
       "tag": "0001_reflective_mantis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1733540745303,
+      "tag": "0002_supreme_morbius",
+      "breakpoints": true
     }
   ]
 }

@@ -1,76 +1,86 @@
 import { InferSelectModel, sql } from "drizzle-orm";
-import { pgTable, uuid, text, timestamp, jsonb, boolean, real, pgEnum, vector } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  jsonb,
+  boolean,
+  real,
+  pgEnum,
+  vector,
+  integer,
+} from "drizzle-orm/pg-core";
 
 export const createVectorExtension = sql`CREATE EXTENSION IF NOT EXISTS vector`;
-
 
 export const userRoleEnum = pgEnum("userRole", [
   "super_admin",
   "org:admin",
   "org:member",
-  "student"
+  "student",
 ]);
 
 export const communicationModeEnum = pgEnum("communication_mode", [
-  "video_only",    // Video and audio enabled
-  "audio_only",    // Only audio enabled
-  "text_only",     // Text-based communication only
-  "multiple"       // Combination of modes (e.g., video + text)
+  "video_only", // Video and audio enabled
+  "audio_only", // Only audio enabled
+  "text_only", // Text-based communication only
+  "multiple", // Combination of modes (e.g., video + text)
 ]);
 
 export const sessionCategoryEnum = pgEnum("session_category", [
-  "initial_assessment",     // First counseling session
-  "program_review",        // Specific program discussion
-  "document_review",       // Review of student documents/applications
-  "follow_up",            // Follow-up consultation
-  "mock_interview",       // Interview preparation
-  "general_query",        // General questions about programs/process
-  "application_support",  // Help with application process
-  "visa_guidance",        // Visa-related queries
-  "scholarship_review",   // Scholarship-related discussion
-  "test_preparation"      // Study/test preparation guidance
+  "initial_assessment", // First counseling session
+  "program_review", // Specific program discussion
+  "document_review", // Review of student documents/applications
+  "follow_up", // Follow-up consultation
+  "mock_interview", // Interview preparation
+  "general_query", // General questions about programs/process
+  "application_support", // Help with application process
+  "visa_guidance", // Visa-related queries
+  "scholarship_review", // Scholarship-related discussion
+  "test_preparation", // Study/test preparation guidance
 ]);
 
 export const messageTypeEnum = pgEnum("message_type", [
-  "user_message",     // Message from the user
-  "bot_message",      // Message from the AI bot
-  "system_message",   // System notifications/updates
-  "recommendation",   // Program recommendations
-  "action_item"       // Tasks/actions for the user
+  "user_message", // Message from the user
+  "bot_message", // Message from the AI bot
+  "system_message", // System notifications/updates
+  "recommendation", // Program recommendations
+  "action_item", // Tasks/actions for the user
 ]);
 
 export const enrollmentStatusEnum = pgEnum("enrollment_status", [
-  "pending",          // Initial request status
-  "under_review",     // Being reviewed by counselor/admin
-  "approved",         // Request approved
-  "rejected",         // Request rejected
-  "cancelled"         // Cancelled by student
+  "pending", // Initial request status
+  "under_review", // Being reviewed by counselor/admin
+  "approved", // Request approved
+  "rejected", // Request rejected
+  "cancelled", // Cancelled by student
 ]);
 
 export const assignmentStatusEnum = pgEnum("assignment_status", [
   "open",
   "assigned",
   "in_progress",
-  "completed"
+  "completed",
 ]);
 
 // Enum for document categories
 export const documentCategoryEnum = pgEnum("document_category", [
-  "faq",                    // Frequently Asked Questions
-  "visa_information",       // Visa-related content
-  "application_guide",      // Application process guides
-  "program_information",    // General program information
-  "country_guide",          // Country-specific information
-  "financial_information",  // Financial guidance and scholarships
-  "test_preparation",       // Test prep resources
-  "general",               // Other general content
+  "faq", // Frequently Asked Questions
+  "visa_information", // Visa-related content
+  "application_guide", // Application process guides
+  "program_information", // General program information
+  "country_guide", // Country-specific information
+  "financial_information", // Financial guidance and scholarships
+  "test_preparation", // Test prep resources
+  "general", // Other general content
 ]);
 
 export const orgStatusEnum = pgEnum("org_status", [
   "active",
   "inactive",
   "suspended",
-  "pending"
+  "pending",
 ]);
 
 export const organizations = pgTable("organizations", {
@@ -79,16 +89,16 @@ export const organizations = pgTable("organizations", {
   subdomain: text("subdomain").notNull().unique(),
   customDomain: text("custom_domain").unique(),
   status: orgStatusEnum("status").notNull().default("pending"),
-  
+
   // Contact Information
   email: text("email").notNull(),
   phone: text("phone"),
   address: jsonb("address"),
-  
+
   // Subscription/Billing (basic fields - can be expanded)
   planType: text("plan_type").notNull().default("free"),
   subscriptionStatus: text("subscription_status").notNull().default("active"),
-  
+
   // Metadata
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -100,33 +110,33 @@ export const organizationSettings = pgTable("organization_settings", {
   organizationId: uuid("organization_id")
     .references(() => organizations.id)
     .notNull(),
-  
+
   // Branding
   logo: text("logo_url"),
   favicon: text("favicon_url"),
-  
+
   // Theme
   theme: jsonb("theme").default({
     primaryColor: "#3B82F6",
     secondaryColor: "#10B981",
     accentColor: "#6366F1",
-    fontFamily: "Inter"
+    fontFamily: "Inter",
   }),
-  
+
   // Features Configuration
   features: jsonb("features").default({
     videoBot: true,
     liveChat: true,
     programManagement: true,
-    analytics: true
+    analytics: true,
   }),
-  
+
   // Custom Scripts/Tracking
   scripts: jsonb("scripts").$type<{
     header?: string[];
     body?: string[];
   }>(),
-  
+
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -135,41 +145,43 @@ export const landingPages = pgTable("landing_pages", {
   organizationId: uuid("organization_id")
     .references(() => organizations.id)
     .notNull(),
-  
+
   // Page Content
-  sections: jsonb("sections").$type<{
-    id: string;
-    type: string;
-    content: Record<string, any>;
-    order: number;
-  }[]>(),
-  
+  sections: jsonb("sections").$type<
+    {
+      id: string;
+      type: string;
+      content: Record<string, any>;
+      order: number;
+    }[]
+  >(),
+
   // SEO
   seo: jsonb("seo").default({
     title: "",
     description: "",
     keywords: [],
-    ogImage: ""
+    ogImage: "",
   }),
-  
+
   // Publishing
   isPublished: boolean("is_published").default(false),
   publishedAt: timestamp("published_at"),
-  
+
   // Versioning
   version: text("version").notNull().default("1.0"),
-  
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").references(() => organizations.id),  // Optional for platform-level users
+  organizationId: uuid("organization_id").references(() => organizations.id), // Optional for platform-level users
   clerkId: text("clerk_id").unique(),
   email: text("email").notNull(),
   fullName: text("full_name").notNull(),
-  role: userRoleEnum("userRole").notNull().default('student'),
+  role: userRoleEnum("userRole").notNull().default("student"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -225,31 +237,31 @@ export const programs = pgTable("programs", {
 export const chatSessions = pgTable("chat_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   studentId: uuid("student_id").references(() => users.id),
-  
+
   // Communication type
   communicationMode: communicationModeEnum("communication_mode").notNull(),
-  
+
   // Session categorization
   category: sessionCategoryEnum("session_category").notNull(),
-  
+
   // Program reference (optional)
   programId: uuid("program_id").references(() => programs.id),
-  
+
   // Session timing
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time"),
-  
+
   // Session data
   summary: text("summary"),
   recommendations: jsonb("recommendations"),
   sentimentScore: real("sentiment_score"),
-  
+
   // Session status
   status: text("status").notNull().default("active"), // active, completed, cancelled, scheduled
-  
+
   // Metadata for additional properties
   metadata: jsonb("metadata"), // For storing session-specific data
-  
+
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -294,54 +306,58 @@ export const counselorInvitations = pgTable("counselor_invitations", {
 
 export const counselorAssignments = pgTable("counselor_assignments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  
+
   // References to other tables
-  studentId: uuid("student_id").references(() => users.id).notNull(),
-  counselorId: uuid("counselor_id").references(() => users.id),  // Optional field
-  programId: uuid("program_id").references(() => programs.id),   // Optional field
-  conversationId: uuid("conversation_id").references(() => chatSessions.id).notNull(),
-  
+  studentId: uuid("student_id")
+    .references(() => users.id)
+    .notNull(),
+  counselorId: uuid("counselor_id").references(() => users.id), // Optional field
+  programId: uuid("program_id").references(() => programs.id), // Optional field
+  conversationId: uuid("conversation_id")
+    .references(() => chatSessions.id)
+    .notNull(),
+
   // Assignment status
   status: assignmentStatusEnum("status").notNull().default("open"),
-  
+
   // Additional useful fields
-  notes: text("notes"),                    // For any specific notes about the assignment
-  priority: text("priority"),              // To mark priority level if needed
-  metadata: jsonb("metadata"),             // For any additional data
-  
+  notes: text("notes"), // For any specific notes about the assignment
+  priority: text("priority"), // To mark priority level if needed
+  metadata: jsonb("metadata"), // For any additional data
+
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  assignedAt: timestamp("assigned_at"),    // When counselor was assigned
-  completedAt: timestamp("completed_at"),  // When assignment was completed
+  assignedAt: timestamp("assigned_at"), // When counselor was assigned
+  completedAt: timestamp("completed_at"), // When assignment was completed
 });
 
 export const documentation = pgTable("documentation", {
   id: uuid("id").primaryKey().defaultRandom(),
-  
+
   // Basic content fields
   title: text("title").notNull(),
-  content: text("content").notNull(),      // Rich text content from WYSIWYG editor
-  
+  content: text("content").notNull(), // Rich text content from WYSIWYG editor
+
   // Categorization and organization
   category: documentCategoryEnum("category").notNull(),
-  subcategory: text("subcategory"),        // Optional further categorization
-  slug: text("slug").notNull().unique(),   // URL-friendly version of title
-  
+  subcategory: text("subcategory"), // Optional further categorization
+  slug: text("slug").notNull().unique(), // URL-friendly version of title
+
   // SEO and display fields
-  description: text("description"),         // Short description/summary
+  description: text("description"), // Short description/summary
   keywords: jsonb("keywords").$type<string[]>(), // SEO keywords
-  
+
   // Publishing status
   isPublished: boolean("is_published").default(false),
   publishedAt: timestamp("published_at"),
-  
+
   // Metadata for any additional properties
   metadata: jsonb("metadata"),
-  
+
   // Related content
   relatedDocIds: jsonb("related_doc_ids").$type<string[]>(),
-  
+
   // Audit fields
   createdBy: uuid("created_by").references(() => users.id),
   updatedBy: uuid("updated_by").references(() => users.id),
@@ -351,22 +367,66 @@ export const documentation = pgTable("documentation", {
 
 export const documentEmbeddings = pgTable("document_embeddings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  
+
   // Reference to the documentation table
   documentId: uuid("document_id")
     .notNull()
-    .references(() => documentation.id, { onDelete: 'cascade' }),
-  
+    .references(() => documentation.id, { onDelete: "cascade" }),
+
   // Embedding vector - using 1536 dimensions for OpenAI's text-embedding-3-small model
   embedding: vector("embedding", { dimensions: 1536 }).notNull(),
-  
+
   // Fields to track embedding metadata
-  modelName: text("model_name").notNull(),      // Name of the embedding model used
+  modelName: text("model_name").notNull(), // Name of the embedding model used
   modelVersion: text("model_version").notNull(), // Version of the embedding model
-  
+
   // Audit fields
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// For managing API keys
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .references(() => organizations.id)
+    .notNull(),
+
+  // API Key details
+  name: text("name").notNull(),
+  key: text("key").notNull().unique(), // Hashed API key
+  prefix: text("prefix").notNull().unique(), // Visible part of the key (e.g., EDU_xxxx)
+
+  // Security settings
+  allowedDomains: jsonb("allowed_domains").$type<string[]>(), // List of domains that can use this key
+  allowedIps: jsonb("allowed_ips").$type<string[]>(), // Optional IP whitelist
+
+  // Usage limits
+  monthlyQuota: integer("monthly_quota"), // Number of chats allowed per month
+
+  // Status
+  isActive: boolean("is_active").default(true),
+
+  // Timestamps
+  expiresAt: timestamp("expires_at"), // Optional expiration
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// For tracking API key usage
+export const apiKeyUsage = pgTable("api_key_usage", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  apiKeyId: uuid("api_key_id")
+    .references(() => apiKeys.id)
+    .notNull(),
+
+  // Usage details
+  sessionId: uuid("session_id").references(() => chatSessions.id),
+  domain: text("domain").notNull(),
+  ip: text("ip"),
+
+  timestamp: timestamp("timestamp").defaultNow(),
 });
 
 export const createHNSWIndex = sql`
@@ -379,27 +439,34 @@ export type DocumentCategory = typeof documentCategoryEnum.enumValues;
 export type AssignmentStatus = typeof assignmentStatusEnum.enumValues;
 export type CommunicationMode = typeof communicationModeEnum.enumValues;
 export type SessionCategory = typeof sessionCategoryEnum.enumValues;
-export const programEnrollmentRequests = pgTable("program_enrollment_requests", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  
-  // References
-  programId: uuid("program_id").references(() => programs.id).notNull(),
-  studentId: uuid("student_id").references(() => users.id).notNull(),
-  reviewerId: uuid("reviewer_id").references(() => users.id), // Counselor/admin reviewing the request
-  
-  // Request details
-  status: enrollmentStatusEnum("status").notNull().default("pending"),
-  notes: text("notes"),                    // Student's notes with the request
-  reviewNotes: text("review_notes"),       // Reviewer's notes
-  
-  // Timestamps
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  reviewedAt: timestamp("reviewed_at"),    // When request was reviewed
-});
+export const programEnrollmentRequests = pgTable(
+  "program_enrollment_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+
+    // References
+    programId: uuid("program_id")
+      .references(() => programs.id)
+      .notNull(),
+    studentId: uuid("student_id")
+      .references(() => users.id)
+      .notNull(),
+    reviewerId: uuid("reviewer_id").references(() => users.id), // Counselor/admin reviewing the request
+
+    // Request details
+    status: enrollmentStatusEnum("status").notNull().default("pending"),
+    notes: text("notes"), // Student's notes with the request
+    reviewNotes: text("review_notes"), // Reviewer's notes
+
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+    reviewedAt: timestamp("reviewed_at"), // When request was reviewed
+  }
+);
 
 export type MessageType = typeof messageTypeEnum.enumValues;
 export type UserRole = typeof userRoleEnum.enumValues;
 export type EnrollmentStatus = typeof enrollmentStatusEnum.enumValues;
-export type Organization = InferSelectModel<typeof organizations>
+export type Organization = InferSelectModel<typeof organizations>;
 export type LandingPage = InferSelectModel<typeof landingPages>;
