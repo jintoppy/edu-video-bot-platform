@@ -40,10 +40,8 @@ export class EduBot {
       ...config
     };
     this.api = createApiClient(config.apiKey, config.baseUrl);
-    this.initializeEventListeners();
-  }
-
-  private initializeEventListeners() {
+    
+    // Initialize event listeners immediately
     window.addEventListener('message', this.handleIframeMessage.bind(this));
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
   }
@@ -90,17 +88,23 @@ export class EduBot {
 
     // Initialize chat in iframe once loaded
     this.iframe.onload = () => {
-      this.iframe?.contentWindow?.postMessage({
-        type: 'CHAT_INITIALIZED',
-        payload: {
-          sessionId: this.sessionId,
-          settings: {
-            ...this.widgetOptions,
-            ...(sessionData?.settings || {})
-          },
-          ...this.options
+      // Small delay to ensure iframe is fully ready
+      setTimeout(() => {
+        if (this.iframe?.contentWindow) {
+          console.log('Sending CHAT_INITIALIZED to iframe');
+          this.iframe.contentWindow.postMessage({
+            type: 'CHAT_INITIALIZED',
+            payload: {
+              sessionId: this.sessionId,
+              settings: {
+                ...this.widgetOptions,
+                ...(sessionData?.settings || {})
+              },
+              ...this.options
+            }
+          }, '*');
         }
-      }, '*');
+      }, 100);
     };
   }
 
