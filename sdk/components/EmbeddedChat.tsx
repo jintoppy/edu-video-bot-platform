@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { X, Minimize2, Maximize2, MessageSquare } from "lucide-react";
 import { ChatInterface } from "./ChatInterface";
 import type { OrganizationTheme } from "../lib/types";
-import { getApiClient } from "../lib/api";
+import { createApiClient, getApiClient } from "../lib/api";
 
 interface EmbeddedChatProps {
   apiKey: string;
@@ -44,6 +44,9 @@ export function EmbeddedChat({
   const [uiContent, setUiContent] = useState<any>(null);
 
   useEffect(() => {
+    // Initialize API client first
+    createApiClient(apiKey);
+
     const fetchOrgSettings = async () => {
       // If theme is provided in props, use it
       if (theme) {
