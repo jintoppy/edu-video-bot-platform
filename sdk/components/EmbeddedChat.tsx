@@ -9,8 +9,21 @@ interface EmbeddedChatProps {
   apiKey: string;
   programId?: string;
   sessionId?: string;
-  mode: 'widget' | 'inline',
+  mode: 'widget' | 'inline';
   metadata?: Record<string, any>;
+  settings?: {
+    theme?: OrganizationTheme;
+    features?: {
+      voiceInput: boolean;
+      fileUpload: boolean;
+      videoChat: boolean;
+    };
+    messages?: {
+      welcome?: string;
+      placeholder?: string;
+    };
+  };
+  theme?: OrganizationTheme;
   onClose?: () => void;
 }
 
@@ -31,17 +44,20 @@ export function EmbeddedChat({
   const [uiContent, setUiContent] = useState<any>(null);
 
   useEffect(() => {
-    // Fetch organization settings when component mounts
-    const fetchOrgSettings = async () => {
-      const api = getApiClient();
-      const response = await api.getOrgSettings(apiKey);
-      if (response.data?.theme) {
-        setTheme(response.data.theme);
-      }
-    };
-
-    fetchOrgSettings();
-  }, [apiKey]);
+    // Use theme from props if provided, otherwise fetch from API
+    if (props.theme) {
+      setTheme(props.theme);
+    } else {
+      const fetchOrgSettings = async () => {
+        const api = getApiClient();
+        const response = await api.getOrgSettings(apiKey);
+        if (response.data?.theme) {
+          setTheme(response.data.theme);
+        }
+      };
+      fetchOrgSettings();
+    }
+  }, [apiKey, props.theme]);
 
   const handleSendMessage = async (content: string) => {
     const api = getApiClient();
@@ -98,7 +114,10 @@ export function EmbeddedChat({
     : {};
 
   return (
-    <div className="fixed bottom-4 right-4 z-50" style={themeStyles}>
+    <div 
+      className={`${mode === 'widget' ? 'fixed bottom-4 right-4' : ''} z-50`} 
+      style={themeStyles}
+    >
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}

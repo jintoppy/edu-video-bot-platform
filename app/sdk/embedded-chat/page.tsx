@@ -70,6 +70,7 @@ export default function EmbeddedChatPage() {
         mode={mode as 'widget' | 'inline'}
         settings={mergedConfig.settings}
         metadata={mergedConfig.metadata}
+        theme={mergedConfig.settings?.theme}
       />
     </div>
   );
