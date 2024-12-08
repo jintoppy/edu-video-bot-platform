@@ -14,16 +14,23 @@ const isPublicRoute = createRouteMatcher([
   '/org/:subdomain',
   '/org/:subdomain/programs',
   '/api/programs',
-  '/api/v1/sdk/(.*)'
+  '/api/v1/sdk/(.*)',
+  '/sdk/embedded-chat'
 ]);
 
 async function handleRequest(auth: any, request: NextRequest) {
-  // Handle SDK CORS for /api/v1/sdk routes first
-  if (request.nextUrl.pathname.startsWith('/api/v1/sdk')) {
+
+  const isPublic = isPublicRoute(request);
+
+  console.log('request.url', request.url);
+  console.log('isPublic', isPublic)
+  console.log('request.nextUrl.pathname', request.nextUrl.pathname)
+
+  if (request.nextUrl.pathname.startsWith('/api/v1/sdk') || 
+  request.nextUrl.pathname === '/sdk/embedded-chat') {
     if (request.method === 'OPTIONS') {
       return handleOptions(request);
     }
-    console.log(request.method, 'request.method');
     return sdkCorsMiddleware(request);
   }
 
@@ -44,9 +51,7 @@ async function handleRequest(auth: any, request: NextRequest) {
   if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'localhost:3000') {
     const newUrl = new URL(`/org/${subdomain}${url.pathname}`, request.url);
     return NextResponse.rewrite(newUrl);
-  }
-
-  const isPublic = isPublicRoute(request);
+  }  
 
   // Protect non-public routes with authentication
   if (!isPublic) {
@@ -65,5 +70,6 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
+    '/sdk/embedded-chat'
   ],
 };
