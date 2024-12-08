@@ -48,6 +48,62 @@ export class EduBot {
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
   }
 
+  private createIframe(sessionData?: any) {
+    if (!this.container) return;
+
+    this.iframe = document.createElement('iframe');
+    
+    // Create URL with parameters
+    const params = new URLSearchParams({
+      apiKey: this.config.apiKey,
+      sessionId: this.sessionId || '',
+      mode: this.widgetMode ? 'widget' : 'inline',
+      ...(this.options.programId && { programId: this.options.programId }),
+    });
+
+    // Add theme parameters if in widget mode
+    if (this.widgetMode && this.widgetOptions?.theme) {
+      params.append('primaryColor', this.widgetOptions.theme.primaryColor || '');
+      params.append('fontFamily', this.widgetOptions.theme.fontFamily || '');
+    }
+
+    this.iframe.src = `${this.config.baseUrl}/sdk/embedded-chat?${params.toString()}`;
+    this.iframe.className = this.widgetMode ? 'edubot-widget-iframe' : 'edubot-iframe';
+    
+    // Set sandbox attributes for security while allowing necessary features
+    this.iframe.sandbox.add('allow-same-origin');
+    this.iframe.sandbox.add('allow-scripts');
+    this.iframe.sandbox.add('allow-forms');
+    this.iframe.sandbox.add('allow-popups');
+    
+    // Allow microphone and camera if needed
+    this.iframe.allow = 'microphone; camera';
+    
+    // Style iframe
+    this.iframe.style.border = 'none';
+    this.iframe.style.width = '100%';
+    this.iframe.style.height = '100%';
+    this.iframe.style.borderRadius = this.widgetMode ? '12px' : '0';
+    
+    // Append iframe to container
+    this.container.appendChild(this.iframe);
+
+    // Initialize chat in iframe once loaded
+    this.iframe.onload = () => {
+      this.iframe?.contentWindow?.postMessage({
+        type: 'CHAT_INITIALIZED',
+        payload: {
+          sessionId: this.sessionId,
+          settings: {
+            ...this.widgetOptions,
+            ...(sessionData?.settings || {})
+          },
+          ...this.options
+        }
+      }, '*');
+    };
+  }
+
   private handleIframeMessage(event: MessageEvent) {
     // Only handle messages from our iframe
     if (this.iframe && event.source === this.iframe.contentWindow) {
@@ -213,7 +269,7 @@ export class EduBot {
     }
 
     try {
-      // Initialize chat session
+      // Initialize chat session with API
       const response = await this.api.initializeChat(this.options);
       
       if (response.error) {
@@ -222,32 +278,15 @@ export class EduBot {
 
       this.sessionId = response.data?.sessionId;
 
-      // Create and setup iframe
-      if (this.container) {
-        this.iframe = document.createElement('iframe');
-        this.iframe.src = `${this.config.baseUrl}/sdk/embedded-chat`;
-        this.iframe.className = this.widgetMode ? 'edubot-widget-iframe' : 'edubot-iframe';
-        
-        // Update widget button if in widget mode
-        if (this.widgetMode) {
-          const button = this.container.querySelector('.edubot-widget-button');
-          button?.classList.add('edubot-widget-button-active');
-        }
-        
-        this.container.appendChild(this.iframe);
-        
-        // Initialize chat in iframe
-        this.iframe.onload = () => {
-          this.iframe?.contentWindow?.postMessage({
-            type: 'CHAT_INITIALIZED',
-            payload: {
-              sessionId: this.sessionId,
-              settings: this.widgetOptions,
-              ...this.options
-            }
-          }, '*');
-        };
+      // Create the iframe with session data
+      this.createIframe(response.data);
+
+      // Update widget button if in widget mode
+      if (this.widgetMode) {
+        const button = this.container?.querySelector('.edubot-widget-button');
+        button?.classList.add('edubot-widget-button-active');
       }
+
     } catch (error) {
       console.error('Failed to start chat:', error);
       this.emit('error', { message: 'Failed to start chat', error });
