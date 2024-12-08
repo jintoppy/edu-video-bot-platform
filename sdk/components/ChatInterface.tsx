@@ -7,6 +7,7 @@ interface ChatInterfaceProps {
   messages: any[];
   isLoading?: boolean;
   uiContent?: any;
+  theme?: OrganizationTheme;
 }
 
 export function ChatInterface({
@@ -14,6 +15,7 @@ export function ChatInterface({
   messages,
   isLoading,
   uiContent,
+  theme,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
 

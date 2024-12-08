@@ -173,6 +173,7 @@ export function EmbeddedChat({
                 onSendMessage={handleSendMessage}
                 isLoading={isLoading}
                 uiContent={uiContent}
+                theme={theme}
               />
             </div>
           )}
