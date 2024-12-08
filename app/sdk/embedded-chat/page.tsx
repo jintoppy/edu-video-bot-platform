@@ -71,6 +71,7 @@ export default function EmbeddedChatPage() {
         settings={mergedConfig.settings}
         metadata={mergedConfig.metadata}
         theme={mergedConfig.settings?.theme}
+        onClose={() => {}}
       />
     </div>
   );
