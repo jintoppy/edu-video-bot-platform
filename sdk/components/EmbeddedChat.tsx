@@ -8,6 +8,8 @@ import { getApiClient } from "../lib/api";
 interface EmbeddedChatProps {
   apiKey: string;
   programId?: string;
+  sessionId?: string;
+  mode: 'widget' | 'inline',
   metadata?: Record<string, any>;
   onClose?: () => void;
 }
@@ -15,6 +17,8 @@ interface EmbeddedChatProps {
 export function EmbeddedChat({
   apiKey,
   programId,
+  mode,
+  sessionId: sessionIdFromProps,
   metadata = {},
   onClose,
 }: EmbeddedChatProps) {
@@ -23,7 +27,7 @@ export function EmbeddedChat({
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState<OrganizationTheme | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null | undefined>(sessionIdFromProps);
   const [uiContent, setUiContent] = useState<any>(null);
 
   useEffect(() => {
