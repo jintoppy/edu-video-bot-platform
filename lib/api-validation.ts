@@ -5,12 +5,12 @@ import { eq } from "drizzle-orm";
 
 export async function validateApiKeyAndDomain(apiKey: string, origin: string | null) {
   try {
-    console.log('apiKey', apiKey);
-    console.log('origin', origin);
     // Simplified query without 'with' clause
     const keyDetails = await db.query.apiKeys.findFirst({
       where: eq(apiKeys.key, apiKey)
     });
+
+    console.log('keyDetails', keyDetails);
 
     if (!keyDetails) {
       return { 

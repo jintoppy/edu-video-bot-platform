@@ -8,8 +8,13 @@ import { validateApiKeyAndDomain } from "@/lib/api-validation";
 
 export async function POST(req: NextRequest) {
   try {
+    
     const apiKey = req.headers.get("X-API-Key");
-    console.log('apiKey', apiKey);
+
+    return new Response(JSON.stringify({ data: "trial" }), { 
+      status: 200 
+    });
+
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "API key required" }), { 
         status: 401 
