@@ -30,12 +30,27 @@ export default function EmbeddedChatPage() {
   const sessionId = searchParams.get('sessionId');
   const mode = searchParams.get('mode');
   const programId = searchParams.get('programId');
+  const primaryColor = searchParams.get('primaryColor');
+  const fontFamily = searchParams.get('fontFamily');
 
   if (!apiKey) {
     return <div>API Key is required</div>;
   }
 
-  if (!initialized || !config) {
+  // Merge URL parameters with received config
+  const mergedConfig = {
+    ...config,
+    settings: {
+      ...(config?.settings || {}),
+      theme: {
+        ...(config?.settings?.theme || {}),
+        primaryColor: primaryColor || config?.settings?.theme?.primaryColor,
+        fontFamily: fontFamily || config?.settings?.theme?.fontFamily,
+      }
+    }
+  };
+
+  if (!initialized) {
     return <div>Initializing chat...</div>;
   }
 
@@ -46,8 +61,8 @@ export default function EmbeddedChatPage() {
         sessionId={sessionId || undefined}
         programId={programId || undefined}
         mode={mode as 'widget' | 'inline'}
-        settings={config.settings}
-        metadata={config.metadata}
+        settings={mergedConfig.settings}
+        metadata={mergedConfig.metadata}
       />
     </div>
   );
