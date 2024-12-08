@@ -124,6 +124,71 @@ export class ApiClient {
       }
     );
   }
+
+  async getOrgSettings(apiKey: string): Promise<ApiResponse<{ theme?: OrganizationTheme }>> {
+    return this.request<{ theme?: OrganizationTheme }>('/api/v1/sdk/org/settings', {
+      method: 'GET',
+      headers: {
+        'X-API-Key': apiKey
+      }
+    });
+  }
+
+  async *streamChat(
+    message: string,
+    sessionId: string | null | undefined,
+    previousMessages: any[],
+    metadata?: Record<string, any>
+  ): AsyncGenerator<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/sdk/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': this.apiKey,
+        },
+        body: JSON.stringify({
+          message,
+          sessionId,
+          previousMessages,
+          metadata,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Stream request failed');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader available');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const data = JSON.parse(line);
+              yield data;
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Stream error:', error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance

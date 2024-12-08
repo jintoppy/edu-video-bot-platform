@@ -45,8 +45,8 @@ export function EmbeddedChat({
 
   useEffect(() => {
     // Use theme from props if provided, otherwise fetch from API
-    if (props.theme) {
-      setTheme(props.theme);
+    if (theme) {
+      setTheme(theme);
     } else {
       const fetchOrgSettings = async () => {
         const api = getApiClient();
