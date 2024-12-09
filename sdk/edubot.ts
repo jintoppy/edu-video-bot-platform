@@ -32,7 +32,6 @@ export class EduBot {
   private api;
   private container: HTMLElement | null = null;
   private iframe: HTMLIFrameElement | null = null;
-  private static instance: EduBot | null = null;
   private initialized = false;
   private sessionId: string | null = null;
   private widgetMode = false;
@@ -40,13 +39,8 @@ export class EduBot {
   private config: EduBotConfig;
   private widgetOptions: WidgetOptions | null = null;
   private eventListeners: { [key: string]: Function[] } = {};
-  private widgetButton: HTMLElement | null = null;
 
   constructor(config: EduBotConfig) {
-    if (EduBot.instance) {
-      return EduBot.instance;
-    }
-
     this.config = {
       baseUrl: "http://localhost:3000",
       ...config,
@@ -56,8 +50,6 @@ export class EduBot {
     // Initialize event listeners immediately
     window.addEventListener("message", this.handleIframeMessage.bind(this));
     window.addEventListener("beforeunload", this.handleBeforeUnload.bind(this));
-
-    EduBot.instance = this;
   }
 
   private createIframe(sessionData?: any) {
@@ -82,13 +74,9 @@ export class EduBot {
       params.append("fontFamily", this.widgetOptions.theme.fontFamily || "");
     }
 
-    const updatedParams = new URLSearchParams(params);
-    if (this.widgetMode) {
-      updatedParams.append("hideButton", "true");
-    }
     this.iframe.src = `${
       this.config.baseUrl
-    }/sdk/embedded-chat?${updatedParams.toString()}`;
+    }/sdk/embedded-chat?${params.toString()}`;
     this.iframe.className = this.widgetMode
       ? "edubot-widget-iframe"
       : "edubot-iframe";
@@ -107,9 +95,6 @@ export class EduBot {
     this.iframe.style.width = "100%";
     this.iframe.style.height = "100%";
     this.iframe.style.borderRadius = this.widgetMode ? "12px" : "0";
-    if (this.widgetMode) {
-      this.iframe.style.display = "none";
-    }
 
     // Append iframe to container
     this.container.appendChild(this.iframe);
@@ -265,13 +250,9 @@ export class EduBot {
   }
 
   private createWidgetButton() {
-    if (this.widgetButton) {
-      return; // Don't create button if it already exists
-    }
-
-    this.widgetButton = document.createElement("button");
-    this.widgetButton.className = "edubot-widget-button";
-    this.widgetButton.innerHTML = `
+    const widgetButton = document.createElement("button");
+    widgetButton.className = "edubot-widget-button";
+    widgetButton.innerHTML = `
       <div class="edubot-widget-button-closed">
         <div class="edubot-widget-icon">💬</div>
       </div>
@@ -280,7 +261,7 @@ export class EduBot {
       </div>
     `;
 
-    this.widgetButton.addEventListener("click", () => {
+    widgetButton.addEventListener("click", () => {
       if (!this.sessionId) {
         this.startChat();
       } else {
@@ -288,7 +269,7 @@ export class EduBot {
       }
     });
 
-    this.container?.appendChild(this.widgetButton);
+    this.container?.appendChild(widgetButton);
   }
 
   private createGreetingBubble() {

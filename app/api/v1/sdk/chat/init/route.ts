@@ -9,11 +9,7 @@ import { validateApiKeyAndDomain } from "@/lib/api-validation";
 export async function POST(req: NextRequest) {
   try {
     
-    const apiKey = req.headers.get("X-API-Key");
-
-    return new Response(JSON.stringify({ data: "trial" }), { 
-      status: 200 
-    });
+    const apiKey = req.headers.get("X-API-Key");    
 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "API key required" }), { 
@@ -30,15 +26,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Validate API key and get organization
-    const keyDetails = await db.query.apiKeys.findFirst({
-      where: eq(apiKeys.key, apiKey),
-      with: {
-        organization: true
-      }
-    });
 
-    if (!keyDetails?.organization?.id) {
+    if (!validation?.key?.organizationId) {
       return new Response(JSON.stringify({ error: "Invalid API key" }), { 
         status: 401 
       });
@@ -49,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Get organization settings for theme
     const settings = await db.query.organizationSettings.findFirst({
-      where: eq(organizationSettings.organizationId, keyDetails.organization.id)
+      where: eq(organizationSettings.organizationId, validation.key.organizationId)
     });
 
     // Create new chat session
@@ -61,7 +50,7 @@ export async function POST(req: NextRequest) {
       status: "active",
       programId: programId || null,
       metadata: {
-        organizationId: keyDetails.organization.id,
+        organizationId: validation.key.organizationId,
         source: metadata.source || 'sdk',
         ...metadata
       } as ChatSessionMetadata
@@ -69,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     // Track API key usage
     await db.insert(apiKeyUsage).values({
-      apiKeyId: keyDetails.id,
+      apiKeyId: validation.key.id,
       sessionId: session.id,
       domain: metadata.domain || '',
       ip: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''

@@ -262,6 +262,11 @@ export const chatSessions = pgTable("chat_sessions", {
   // Metadata for additional properties
   metadata: jsonb("metadata"), // For storing session-specific data
 
+  lastActiveAt: timestamp("last_active_at"),
+  deviceInfo: jsonb("device_info"),
+  userTimezone: text("user_timezone"),
+  chatHistory: jsonb("chat_history"),
+
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

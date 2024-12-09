@@ -10,8 +10,6 @@ export async function validateApiKeyAndDomain(apiKey: string, origin: string | n
       where: eq(apiKeys.key, apiKey)
     });
 
-    console.log('keyDetails', keyDetails);
-
     if (!keyDetails) {
       return { 
         isValid: false, 

@@ -22,9 +22,6 @@ async function handleRequest(auth: any, request: NextRequest) {
 
   const isPublic = isPublicRoute(request);
 
-  console.log('request.url', request.url);
-  console.log('isPublic', isPublic)
-  console.log('request.nextUrl.pathname', request.nextUrl.pathname)
 
   if (request.nextUrl.pathname.startsWith('/api/v1/sdk') || 
   request.nextUrl.pathname === '/sdk/embedded-chat') {

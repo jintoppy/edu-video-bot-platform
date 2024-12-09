@@ -34,12 +34,14 @@ export function EmbeddedChat({
   sessionId: sessionIdFromProps,
   metadata = {},
   onClose,
+  settings,
+  theme,
 }: EmbeddedChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [theme, setTheme] = useState<OrganizationTheme | null>(null);
+  // const [theme, setTheme] = useState<OrganizationTheme | null>(null);
   const [sessionId, setSessionId] = useState<string | null | undefined>(sessionIdFromProps);
   const [uiContent, setUiContent] = useState<any>(null);
 
@@ -47,22 +49,22 @@ export function EmbeddedChat({
     // Initialize API client first
     createApiClient(apiKey);
 
-    const fetchOrgSettings = async () => {
-      // If theme is provided in props, use it
-      if (theme) {
-        setTheme(theme);
-        return;
-      }
+    // const fetchOrgSettings = async () => {
+    //   // If theme is provided in props, use it
+    //   if (theme) {
+    //     setTheme(theme);
+    //     return;
+    //   }
       
-      // Otherwise fetch from API
-      const api = getApiClient();
-      const response = await api.getOrgSettings(apiKey);
-      if (response.data?.theme) {
-        setTheme(response.data.theme);
-      }
-    };
+    //   // Otherwise fetch from API
+    //   const api = getApiClient();
+    //   const response = await api.getOrgSettings(apiKey);
+    //   if (response.data?.theme) {
+    //     setTheme(response.data.theme);
+    //   }
+    // };
     
-    fetchOrgSettings();
+    // fetchOrgSettings();
   }, [apiKey, theme]);
 
   const handleSendMessage = async (content: string) => {

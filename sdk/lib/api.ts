@@ -126,7 +126,7 @@ export class ApiClient {
   }
 
   async getOrgSettings(apiKey: string): Promise<ApiResponse<{ theme?: OrganizationTheme }>> {
-    return this.request<{ theme?: OrganizationTheme }>('/api/v1/sdk/org/settings', {
+    return this.request<{ theme?: OrganizationTheme }>('/api/v1/sdk/org-settings', {
       method: 'GET',
       headers: {
         'X-API-Key': apiKey
