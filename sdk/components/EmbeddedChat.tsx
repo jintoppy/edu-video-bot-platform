@@ -127,26 +127,26 @@ export function EmbeddedChat({
       style={themeStyles}
     >
         <div
-          className={`bg-white rounded-lg shadow-xl ${
-            isMinimized ? "w-72" : "w-96 h-[600px]"
-          }`}
+          className={`bg-white rounded-lg shadow-xl overflow-hidden ${
+            isMinimized ? "w-72" : "w-[400px] h-[600px]"
+          } flex flex-col`}
           style={{ fontFamily: theme?.fontFamily }}
         >
           {/* Chat Header */}
           <div
-            className="flex items-center justify-between p-4 border-b text-white"
+            className="flex items-center justify-between px-4 py-3 border-b text-white"
             style={{ backgroundColor: theme?.primaryColor }}
           >
-            <h3 className="font-semibold">Student Counseling</h3>
+            <h3 className="font-semibold text-sm">Student Counseling</h3>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
-                className="hover:opacity-80"
+                className="hover:opacity-80 p-1"
               >
                 {isMinimized ? (
-                  <Maximize2 className="w-4 h-4" />
+                  <Maximize2 className="w-3.5 h-3.5" />
                 ) : (
-                  <Minimize2 className="w-4 h-4" />
+                  <Minimize2 className="w-3.5 h-3.5" />
                 )}
               </button>
               <button
@@ -154,16 +154,16 @@ export function EmbeddedChat({
                   setIsOpen(false);
                   onClose?.();
                 }}
-                className="hover:opacity-80"
+                className="hover:opacity-80 p-1"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
           {/* Chat Content */}
           {!isMinimized && (
-            <div className="h-[calc(600px-64px)]">
+            <div className="flex-1 flex flex-col h-[calc(100%-48px)]">
               <ChatInterface
                 messages={messages}
                 onSendMessage={handleSendMessage}
