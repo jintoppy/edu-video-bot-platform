@@ -20,6 +20,12 @@ interface WidgetOptions {
     primaryColor?: string;
     fontFamily?: string;
   };
+  customTriggers?: {
+    elements?: string[];  // CSS selectors
+    events?: string[];    // Custom events that should trigger the chat
+  };
+  preloadIframe?: boolean;
+  minimizedBehavior?: 'hide' | 'minimize';
 }
 
 export class EduBot {
@@ -110,30 +116,40 @@ export class EduBot {
 
   private handleIframeMessage(event: MessageEvent) {
     // Only handle messages from our iframe
-    if (this.iframe && event.source === this.iframe.contentWindow) {
-      const message = event.data as EduBotEvent;
-      
-      switch (message.type) {
-        case 'CHAT_INITIALIZED':
-          this.sessionId = message.payload.data?.sessionId ?? nanoid();
-          this.emit('chatInitialized', message.payload);
-          break;
-        case 'MESSAGE_SENT':
-          this.emit('messageSent', message.payload);
-          break;
-        case 'MESSAGE_RECEIVED':
-          this.emit('messageReceived', message.payload);
-          break;
-        case 'SESSION_ENDED':
-          this.sessionId = null;
-          this.emit('sessionEnded', message.payload);
-          break;
-        case 'ERROR':
-          console.error('EduBot Error:', message.payload.message);
-          this.emit('error', message.payload);
-          break;
-      }
+    try {
+      if (!this.iframe || event.source !== this.iframe.contentWindow) return;
+
+      if (this.iframe && event.source === this.iframe.contentWindow) {
+        const message = event.data as EduBotEvent;
+        
+        switch (message.type) {
+          case 'CHAT_INITIALIZED':
+            this.sessionId = message.payload.data?.sessionId ?? nanoid();
+            this.emit('chatInitialized', message.payload);
+            break;
+          case 'MESSAGE_SENT':
+            this.emit('messageSent', message.payload);
+            break;
+          case 'MESSAGE_RECEIVED':
+            this.emit('messageReceived', message.payload);
+            break;
+          case 'SESSION_ENDED':
+            this.sessionId = null;
+            this.emit('sessionEnded', message.payload);
+            break;
+          case 'ERROR':
+            console.error('EduBot Error:', message.payload.message);
+            this.emit('error', message.payload);
+            break;
+        }
+      }  
+    } catch (error) {
+      this.emit('error', { 
+      message: 'Failed to process iframe message', 
+      error 
+    });
     }
+    
   }
 
   private handleBeforeUnload() {
@@ -200,6 +216,19 @@ export class EduBot {
         this.startChat();
       }, this.widgetOptions.delay);
     }
+  }
+
+  private initStateManagement() {
+    const interval = this.config.stateSaveInterval || 30000;
+    setInterval(() => {
+      if (this.sessionId) {
+        this.api.saveSessionState(this.sessionId)
+          .catch(error => this.emit('error', { 
+            message: 'Failed to save state', 
+            error 
+          }));
+      }
+    }, interval);
   }
 
   private createWidgetButton() {
