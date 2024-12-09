@@ -309,7 +309,9 @@ export class EduBot {
         throw new Error(response.error.message);
       }
 
-      this.sessionId = response.data?.sessionId;
+      if (response.data) {
+        this.sessionId = response.data.sessionId;
+      }
 
       // Create the iframe with session data
       this.createIframe(response.data);
