@@ -82,9 +82,13 @@ export class EduBot {
       params.append("fontFamily", this.widgetOptions.theme.fontFamily || "");
     }
 
+    const updatedParams = new URLSearchParams(params);
+    if (this.widgetMode) {
+      updatedParams.append("hideButton", "true");
+    }
     this.iframe.src = `${
       this.config.baseUrl
-    }/sdk/embedded-chat?${params.toString()}`;
+    }/sdk/embedded-chat?${updatedParams.toString()}`;
     this.iframe.className = this.widgetMode
       ? "edubot-widget-iframe"
       : "edubot-iframe";
@@ -103,6 +107,9 @@ export class EduBot {
     this.iframe.style.width = "100%";
     this.iframe.style.height = "100%";
     this.iframe.style.borderRadius = this.widgetMode ? "12px" : "0";
+    if (this.widgetMode) {
+      this.iframe.style.display = "none";
+    }
 
     // Append iframe to container
     this.container.appendChild(this.iframe);
