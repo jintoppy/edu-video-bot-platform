@@ -139,7 +139,7 @@ async function chat(
 export async function chatAction(
   messages: SerializedMessage[],
   input: string,
-  userId: string
+  userId: string,
 ) {
   try {
     const uiStream = createStreamableUI();

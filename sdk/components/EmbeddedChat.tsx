@@ -126,15 +126,6 @@ export function EmbeddedChat({
       className={`${mode === 'widget' ? 'fixed bottom-4 right-4' : ''} z-50`} 
       style={themeStyles}
     >
-      {!isOpen ? (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="text-white rounded-full p-4 shadow-lg transition-colors"
-          style={{ backgroundColor: theme?.primaryColor }}
-        >
-          <MessageSquare className="w-6 h-6" />
-        </button>
-      ) : (
         <div
           className={`bg-white rounded-lg shadow-xl ${
             isMinimized ? "w-72" : "w-96 h-[600px]"
@@ -183,7 +174,7 @@ export function EmbeddedChat({
             </div>
           )}
         </div>
-      )}
+      
     </div>
   );
 }

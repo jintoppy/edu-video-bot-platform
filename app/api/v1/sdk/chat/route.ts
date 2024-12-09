@@ -5,26 +5,23 @@ import { apiKeys, chatSessions, chatMessages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { chatAction } from '@/app/actions/graph';
 import { createStreamableUI } from 'ai/rsc';
+import { validateApiKeyAndDomain } from '@/lib/api-validation';
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = req.headers.get('X-API-Key');
+    const apiKey = req.headers.get("X-API-Key");    
+
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key required' }), { 
+      return new Response(JSON.stringify({ error: "API key required" }), { 
         status: 401 
       });
     }
 
-    // Verify API key and get organization
-    const keyDetails = await db.query.apiKeys.findFirst({
-      where: eq(apiKeys.key, apiKey),
-      with: {
-        organization: true
-      }
-    });
+    const origin = req.headers.get('origin');
+    const validation = await validateApiKeyAndDomain(apiKey, origin);
 
-    if (!keyDetails?.organization?.id) {
-      return new Response(JSON.stringify({ error: 'Invalid API key' }), { 
+   if (!validation?.key?.organizationId) {
+      return new Response(JSON.stringify({ error: "Invalid API key" }), { 
         status: 401 
       });
     }
@@ -43,22 +40,17 @@ export async function POST(req: NextRequest) {
         status: "active",
         metadata: {
           ...metadata,
-          organizationId: keyDetails.organization.id
+          organizationId: validation.key.organizationId
         }
       }).returning({ id: chatSessions.id });
       chatSessionId = session.id;
     }
 
-    // Create UI stream
-    const uiStream = createStreamableUI();
-
     // Process chat
     const result = await chatAction(
       messages,
       message,
-      metadata.userId,
-      uiStream,
-      chatSessionId
+      metadata.userId
     );
 
     // Return response with streaming capability
