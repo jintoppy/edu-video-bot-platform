@@ -1,12 +1,12 @@
-import { nanoid } from 'nanoid'
-import { createApiClient } from './lib/api';
-import type { 
-  EduBotConfig, 
-  ChatOptions, 
-  EduBotEvent, 
+import { nanoid } from "nanoid";
+import { createApiClient } from "./lib/api";
+import type {
+  EduBotConfig,
+  ChatOptions,
+  EduBotEvent,
   ChatSettings,
-  ChatMessage 
-} from './lib/types';
+  ChatMessage,
+} from "./lib/types";
 
 interface WidgetOptions {
   greeting?: string;
@@ -15,17 +15,17 @@ interface WidgetOptions {
   avatar?: string;
   title?: string;
   subtitle?: string;
-  position?: 'bottom-right' | 'bottom-left';
+  position?: "bottom-right" | "bottom-left";
   theme?: {
     primaryColor?: string;
     fontFamily?: string;
   };
   customTriggers?: {
-    elements?: string[];  // CSS selectors
-    events?: string[];    // Custom events that should trigger the chat
+    elements?: string[]; // CSS selectors
+    events?: string[]; // Custom events that should trigger the chat
   };
   preloadIframe?: boolean;
-  minimizedBehavior?: 'hide' | 'minimize';
+  minimizedBehavior?: "hide" | "minimize";
 }
 
 export class EduBot {
@@ -42,53 +42,60 @@ export class EduBot {
 
   constructor(config: EduBotConfig) {
     this.config = {
-      baseUrl: 'http://localhost:3000',
-      ...config
+      baseUrl: "http://localhost:3000",
+      ...config,
     };
     this.api = createApiClient(config.apiKey, config.baseUrl);
-    
+
     // Initialize event listeners immediately
-    window.addEventListener('message', this.handleIframeMessage.bind(this));
-    window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+    window.addEventListener("message", this.handleIframeMessage.bind(this));
+    window.addEventListener("beforeunload", this.handleBeforeUnload.bind(this));
   }
 
   private createIframe(sessionData?: any) {
     if (!this.container) return;
 
-    this.iframe = document.createElement('iframe');
-    
+    this.iframe = document.createElement("iframe");
+
     // Create URL with parameters
     const params = new URLSearchParams({
       apiKey: this.config.apiKey,
-      sessionId: this.sessionId || '',
-      mode: this.widgetMode ? 'widget' : 'inline',
+      sessionId: this.sessionId || "",
+      mode: this.widgetMode ? "widget" : "inline",
       ...(this.options.programId && { programId: this.options.programId }),
     });
 
     // Add theme parameters if in widget mode
     if (this.widgetMode && this.widgetOptions?.theme) {
-      params.append('primaryColor', this.widgetOptions.theme.primaryColor || '');
-      params.append('fontFamily', this.widgetOptions.theme.fontFamily || '');
+      params.append(
+        "primaryColor",
+        this.widgetOptions.theme.primaryColor || ""
+      );
+      params.append("fontFamily", this.widgetOptions.theme.fontFamily || "");
     }
 
-    this.iframe.src = `${this.config.baseUrl}/sdk/embedded-chat?${params.toString()}`;
-    this.iframe.className = this.widgetMode ? 'edubot-widget-iframe' : 'edubot-iframe';
-    
+    this.iframe.src = `${
+      this.config.baseUrl
+    }/sdk/embedded-chat?${params.toString()}`;
+    this.iframe.className = this.widgetMode
+      ? "edubot-widget-iframe"
+      : "edubot-iframe";
+
     // Set sandbox attributes for security while allowing necessary features
-    this.iframe.sandbox.add('allow-same-origin');
-    this.iframe.sandbox.add('allow-scripts');
-    this.iframe.sandbox.add('allow-forms');
-    this.iframe.sandbox.add('allow-popups');
-    
+    this.iframe.sandbox.add("allow-same-origin");
+    this.iframe.sandbox.add("allow-scripts");
+    this.iframe.sandbox.add("allow-forms");
+    this.iframe.sandbox.add("allow-popups");
+
     // Allow microphone and camera if needed
-    this.iframe.allow = 'microphone; camera';
-    
+    this.iframe.allow = "microphone; camera";
+
     // Style iframe
-    this.iframe.style.border = 'none';
-    this.iframe.style.width = '100%';
-    this.iframe.style.height = '100%';
-    this.iframe.style.borderRadius = this.widgetMode ? '12px' : '0';
-    
+    this.iframe.style.border = "none";
+    this.iframe.style.width = "100%";
+    this.iframe.style.height = "100%";
+    this.iframe.style.borderRadius = this.widgetMode ? "12px" : "0";
+
     // Append iframe to container
     this.container.appendChild(this.iframe);
 
@@ -97,18 +104,21 @@ export class EduBot {
       // Small delay to ensure iframe is fully ready
       setTimeout(() => {
         if (this.iframe?.contentWindow) {
-          console.log('Sending CHAT_INITIALIZED to iframe');
-          this.iframe.contentWindow.postMessage({
-            type: 'CHAT_INITIALIZED',
-            payload: {
-              sessionId: this.sessionId,
-              settings: {
-                ...this.widgetOptions,
-                ...(sessionData?.settings || {})
+          console.log("Sending CHAT_INITIALIZED to iframe");
+          this.iframe.contentWindow.postMessage(
+            {
+              type: "CHAT_INITIALIZED",
+              payload: {
+                sessionId: this.sessionId,
+                settings: {
+                  ...this.widgetOptions,
+                  ...(sessionData?.settings || {}),
+                },
+                ...this.options,
               },
-              ...this.options
-            }
-          }, '*');
+            },
+            "*"
+          );
         }
       }, 100);
     };
@@ -121,35 +131,34 @@ export class EduBot {
 
       if (this.iframe && event.source === this.iframe.contentWindow) {
         const message = event.data as EduBotEvent;
-        
+
         switch (message.type) {
-          case 'CHAT_INITIALIZED':
+          case "CHAT_INITIALIZED":
             this.sessionId = message.payload.data?.sessionId ?? nanoid();
-            this.emit('chatInitialized', message.payload);
+            this.emit("chatInitialized", message.payload);
             break;
-          case 'MESSAGE_SENT':
-            this.emit('messageSent', message.payload);
+          case "MESSAGE_SENT":
+            this.emit("messageSent", message.payload);
             break;
-          case 'MESSAGE_RECEIVED':
-            this.emit('messageReceived', message.payload);
+          case "MESSAGE_RECEIVED":
+            this.emit("messageReceived", message.payload);
             break;
-          case 'SESSION_ENDED':
+          case "SESSION_ENDED":
             this.sessionId = null;
-            this.emit('sessionEnded', message.payload);
+            this.emit("sessionEnded", message.payload);
             break;
-          case 'ERROR':
-            console.error('EduBot Error:', message.payload.message);
-            this.emit('error', message.payload);
+          case "ERROR":
+            console.error("EduBot Error:", message.payload.message);
+            this.emit("error", message.payload);
             break;
         }
-      }  
+      }
     } catch (error) {
-      this.emit('error', { 
-      message: 'Failed to process iframe message', 
-      error 
-    });
+      this.emit("error", {
+        message: "Failed to process iframe message",
+        error,
+      });
     }
-    
   }
 
   private handleBeforeUnload() {
@@ -163,13 +172,13 @@ export class EduBot {
     if (this.initialized) return;
 
     // Create container
-    this.container = document.createElement('div');
-    this.container.id = 'edubot-container';
+    this.container = document.createElement("div");
+    this.container.id = "edubot-container";
     document.body.appendChild(this.container);
 
     // Load styles
-    const style = document.createElement('link');
-    style.rel = 'stylesheet';
+    const style = document.createElement("link");
+    style.rel = "stylesheet";
     style.href = `${this.config.baseUrl}/sdk/styles/embedded.css`;
     document.head.appendChild(style);
 
@@ -184,7 +193,7 @@ export class EduBot {
       delay: 1000,
       title: "Student Counseling",
       subtitle: "Typically replies within an hour",
-      position: 'bottom-right'
+      position: "bottom-right",
     };
 
     this.widgetOptions = { ...defaults, ...options };
@@ -197,13 +206,21 @@ export class EduBot {
 
     // Add widget class and position
     if (this.container) {
-      this.container.classList.add('edubot-widget-mode');
-      this.container.classList.add(`edubot-widget-${this.widgetOptions.position}`);
+      this.container.classList.add("edubot-widget-mode");
+      this.container.classList.add(
+        `edubot-widget-${this.widgetOptions.position}`
+      );
 
       // Apply custom theme if provided
       if (this.widgetOptions.theme) {
-        this.container.style.setProperty('--edubot-primary', this.widgetOptions.theme?.primaryColor ?? '#3B82F6');
-        this.container.style.setProperty('--edubot-font-family', this.widgetOptions.theme?.fontFamily ?? "Inter");
+        this.container.style.setProperty(
+          "--edubot-primary",
+          this.widgetOptions.theme?.primaryColor ?? "#3B82F6"
+        );
+        this.container.style.setProperty(
+          "--edubot-font-family",
+          this.widgetOptions.theme?.fontFamily ?? "Inter"
+        );
       }
     }
 
@@ -222,18 +239,19 @@ export class EduBot {
     const interval = this.config.stateSaveInterval || 30000;
     setInterval(() => {
       if (this.sessionId) {
-        this.api.saveSessionState(this.sessionId)
-          .catch(error => this.emit('error', { 
-            message: 'Failed to save state', 
-            error 
-          }));
+        this.api.saveSessionState(this.sessionId).catch((error) =>
+          this.emit("error", {
+            message: "Failed to save state",
+            error,
+          })
+        );
       }
     }, interval);
   }
 
   private createWidgetButton() {
-    const widgetButton = document.createElement('button');
-    widgetButton.className = 'edubot-widget-button';
+    const widgetButton = document.createElement("button");
+    widgetButton.className = "edubot-widget-button";
     widgetButton.innerHTML = `
       <div class="edubot-widget-button-closed">
         <div class="edubot-widget-icon">💬</div>
@@ -243,7 +261,7 @@ export class EduBot {
       </div>
     `;
 
-    widgetButton.addEventListener('click', () => {
+    widgetButton.addEventListener("click", () => {
       if (!this.sessionId) {
         this.startChat();
       } else {
@@ -257,8 +275,8 @@ export class EduBot {
   private createGreetingBubble() {
     if (!this.widgetOptions?.greeting) return;
 
-    const greetingBubble = document.createElement('div');
-    greetingBubble.className = 'edubot-widget-greeting';
+    const greetingBubble = document.createElement("div");
+    greetingBubble.className = "edubot-widget-greeting";
     greetingBubble.innerHTML = `
       <div class="edubot-widget-greeting-text">${this.widgetOptions.greeting}</div>
       <div class="edubot-widget-greeting-close">×</div>
@@ -268,17 +286,19 @@ export class EduBot {
 
     // Show greeting after delay
     setTimeout(() => {
-      greetingBubble.classList.add('edubot-widget-greeting-visible');
+      greetingBubble.classList.add("edubot-widget-greeting-visible");
     }, this.widgetOptions.delay);
 
     // Handle greeting interactions
-    const closeBtn = greetingBubble.querySelector('.edubot-widget-greeting-close');
-    closeBtn?.addEventListener('click', (e) => {
+    const closeBtn = greetingBubble.querySelector(
+      ".edubot-widget-greeting-close"
+    );
+    closeBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
       greetingBubble.remove();
     });
 
-    greetingBubble.addEventListener('click', () => {
+    greetingBubble.addEventListener("click", () => {
       greetingBubble.remove();
       this.startChat();
     });
@@ -286,10 +306,10 @@ export class EduBot {
 
   private toggleChat() {
     if (this.iframe) {
-      const isVisible = this.iframe.style.display !== 'none';
-      this.iframe.style.display = isVisible ? 'none' : 'block';
-      const button = this.container?.querySelector('.edubot-widget-button');
-      button?.classList.toggle('edubot-widget-button-active', !isVisible);
+      const isVisible = this.iframe.style.display !== "none";
+      this.iframe.style.display = isVisible ? "none" : "block";
+      const button = this.container?.querySelector(".edubot-widget-button");
+      button?.classList.toggle("edubot-widget-button-active", !isVisible);
     }
   }
 
@@ -304,27 +324,41 @@ export class EduBot {
     try {
       // Initialize chat session with API
       const response = await this.api.initializeChat(this.options);
-      
+
       if (response.error) {
         throw new Error(response.error.message);
       }
 
-      if (response.data) {
-        this.sessionId = response.data.sessionId;
+      if (response.data && response.data.data?.sessionId) {
+        this.sessionId = response.data.data?.sessionId;
       }
 
       // Create the iframe with session data
-      this.createIframe(response.data);
+      this.createIframe(
+        response.data?.data ?? {
+          settings: {
+            features: {
+              audio: false,
+              video: false,
+            },
+          },
+          theme: {
+            accentColor: "#6366F1",
+            fontFamily: "Inter",
+            primaryColor: "#3B82F6",
+            secondaryColor: "#10B981",
+          },
+        }
+      );
 
       // Update widget button if in widget mode
       if (this.widgetMode) {
-        const button = this.container?.querySelector('.edubot-widget-button');
-        button?.classList.add('edubot-widget-button-active');
+        const button = this.container?.querySelector(".edubot-widget-button");
+        button?.classList.add("edubot-widget-button-active");
       }
-
     } catch (error) {
-      console.error('Failed to start chat:', error);
-      this.emit('error', { message: 'Failed to start chat', error });
+      console.error("Failed to start chat:", error);
+      this.emit("error", { message: "Failed to start chat", error });
     }
   }
 
@@ -334,21 +368,21 @@ export class EduBot {
       try {
         await this.api.endSession(this.sessionId);
         this.sessionId = null;
-        
+
         if (this.iframe) {
           this.iframe.remove();
           this.iframe = null;
         }
 
         if (this.widgetMode) {
-          const button = this.container?.querySelector('.edubot-widget-button');
-          button?.classList.remove('edubot-widget-button-active');
+          const button = this.container?.querySelector(".edubot-widget-button");
+          button?.classList.remove("edubot-widget-button-active");
         }
 
-        this.emit('sessionEnded', { sessionId: this.sessionId });
+        this.emit("sessionEnded", { sessionId: this.sessionId });
       } catch (error) {
-        console.error('Failed to end chat:', error);
-        this.emit('error', { message: 'Failed to end chat', error });
+        console.error("Failed to end chat:", error);
+        this.emit("error", { message: "Failed to end chat", error });
       }
     }
   }
@@ -364,14 +398,14 @@ export class EduBot {
   off(event: string, callback: Function) {
     if (this.eventListeners[event]) {
       this.eventListeners[event] = this.eventListeners[event].filter(
-        cb => cb !== callback
+        (cb) => cb !== callback
       );
     }
   }
 
   private emit(event: string, data: any) {
     if (this.eventListeners[event]) {
-      this.eventListeners[event].forEach(callback => callback(data));
+      this.eventListeners[event].forEach((callback) => callback(data));
     }
   }
 
@@ -388,15 +422,15 @@ export class EduBot {
     if (this.sessionId) {
       this.endChat();
     }
-    
+
     if (this.container) {
       this.container.remove();
       this.container = null;
     }
-    
-    window.removeEventListener('message', this.handleIframeMessage);
-    window.removeEventListener('beforeunload', this.handleBeforeUnload);
-    
+
+    window.removeEventListener("message", this.handleIframeMessage);
+    window.removeEventListener("beforeunload", this.handleBeforeUnload);
+
     this.initialized = false;
     this.widgetMode = false;
     this.eventListeners = {};
