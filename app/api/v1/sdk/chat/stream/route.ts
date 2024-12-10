@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai';
-import { streamText, tool } from 'ai';
+import { JSONValue, StreamData, streamText, tool, ToolExecutionOptions } from 'ai';
 import { z } from 'zod';
 import { programs, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -14,16 +14,19 @@ function renderClassificationUI(category: string) {
           {
             type: 'text',
             label: 'Current Education Level',
+            required: true,
             id: 'education'
           },
           {
             type: 'multiselect',
             label: 'Preferred Countries',
+            required: true,
             id: 'countries',
             options: ['USA', 'UK', 'Canada', 'Australia']
           },
           {
             type: 'number',
+            required: false,
             label: 'Budget Range (USD)',
             id: 'budget'
           }
@@ -67,18 +70,21 @@ function renderClassificationUI(category: string) {
             type: 'multiselect',
             label: 'Target Countries',
             id: 'targetCountries',
+            required: true,
             options: ['USA', 'UK', 'Canada', 'Australia', 'Other']
           },
           {
             type: 'textarea',
             label: 'Academic Interests',
             id: 'academicInterests',
+            required: false,
             placeholder: 'Tell us about your academic interests and goals'
           },
           {
             type: 'select',
             label: 'Urgency',
             id: 'urgency',
+            required: false,
             options: ['high', 'medium', 'low']
           }
         ]
@@ -256,15 +262,13 @@ const searchProgramsTool = tool({
 const getRecommendationsTool = tool({
   description: 'Show program recommendations based on student profile and preferences',
   parameters: z.object({
-    programs: z.array(z.object({
-      name: z.string(),
-      university: z.string(),
-      details: z.string(),
-      match: z.number()
-    })),
-    totalResults: z.number()
+    summary: z.string()
   }),
-  execute: async ({ programs, totalResults }) => {
+  execute: async ({ summary }) => {
+    console.log(summary);
+    const programs = [{title: 'Sample Pgm', university: 'Sample Uni', details: 'Sample details', match: 0.8, id: 1}];
+    const totalResults = programs.length;
+
     return {
       programs,
       totalResults,
@@ -301,18 +305,84 @@ export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
+  const streamingData = new StreamData();
+
   const result = streamText({
     model: openai('gpt-4-turbo'),
     system: SYSTEM_PROMPT,
     messages,
     maxSteps: 5,
     tools: {
-      collectUserInfo: collectUserInfoTool,
-      humanCounselor: humanCounselorTool,
-      classifyQuery: classifyQueryTool,
+      collectUserInfo: {
+        ...collectUserInfoTool,
+        execute: async (params, options) => {
+          const response = await collectUserInfoTool.execute(params, options);
+          // Append UI data to stream if present
+          if (response.ui) {
+            streamingData.append({
+              type: 'ui',
+              content: response.ui
+            });
+          }
+          return response;
+        }
+      },
+      humanCounselor: {
+        ...humanCounselorTool,
+        execute: async (params, options: ToolExecutionOptions) => {
+          const response = await humanCounselorTool.execute(params, options);
+          if (response.ui) {
+            streamingData.append({
+              type: 'ui',
+              content: response.ui,
+              toolCallId: options.toolCallId
+            });
+          }
+          return response;
+        }
+      },
+      classifyQuery: {
+        ...classifyQueryTool,
+        execute: async (params, options: ToolExecutionOptions) => {
+          const response = await classifyQueryTool.execute(params, options);
+          if (response.ui) {
+            // Transform fields to ensure JSON compatibility
+            const uiContent = {
+              type: response.ui.type,
+              fields: response.ui.fields.map(field => ({
+                ...field,
+                // Ensure optional properties are always defined with null instead of undefined
+                options: field.options || null,
+                required: field.required || false,
+                placeholder: field.placeholder || null
+              }))
+            };
+      
+            streamingData.append({
+              type: 'ui',
+              content: uiContent as JSONValue,
+              toolCallId: options.toolCallId
+            });
+          }
+          return response;
+        }
+      },
       searchVectorDB: searchVectorDBTool,
       searchPrograms: searchProgramsTool,
-      getRecommendations: getRecommendationsTool
+      getRecommendations: {
+        ...getRecommendationsTool,
+        execute: async (params, options: ToolExecutionOptions) => {
+          const response = await getRecommendationsTool.execute(params, options);
+          if (response.ui) {
+            streamingData.append({
+              type: 'ui',
+              content: response.ui,
+              toolCallId: options.toolCallId
+            });
+          }
+          return response;
+        }
+      },
     }
   });
 
