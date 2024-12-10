@@ -72,6 +72,7 @@ export interface ChatSettings {
 // Event types for communication between SDK and embedded chat
 export type EduBotEvent =
   | { type: "CHAT_INITIALIZED"; payload: InitResponse }
+  | { type: "CHAT_CLOSE";  }
   | { type: "MESSAGE_SENT"; payload: ChatMessage }
   | { type: "MESSAGE_RECEIVED"; payload: ChatMessage }
   | { type: "SESSION_ENDED"; payload: { sessionId: string } }

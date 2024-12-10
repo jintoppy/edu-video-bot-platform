@@ -221,7 +221,7 @@ export function EmbeddedChat({
           {!isMinimized && (
             <div className="flex flex-1">
               {/* Left Panel - Video/UI Content */}
-              <div className="w-1/2 border-r flex flex-col">
+              <div className="w-1/2 border-r flex flex-1 flex-col">
                 {settings?.features?.videoChat ? (
                   <div className="aspect-video bg-gray-100 relative">
                     <video 
@@ -252,7 +252,7 @@ export function EmbeddedChat({
               </div>
 
               {/* Right Panel - Chat Interface */}
-              <div className="w-1/2 flex flex-col">
+              <div className="w-1/2 flex flex-col flex-1">
                 <ChatInterface
                   messages={messages}
                   onSendMessage={handleSendMessage}

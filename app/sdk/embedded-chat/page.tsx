@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { EmbeddedChat } from '@/sdk/components/EmbeddedChat';
 import { useSearchParams } from 'next/navigation';
+import { X } from 'lucide-react';
 
 interface PageProps {
   searchParams: { [key: string]: string | undefined };
