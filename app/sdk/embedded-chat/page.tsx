@@ -17,7 +17,6 @@ export default function EmbeddedChatPage() {
   useEffect(() => {
     // Listen for initialization message from parent
     const handleMessage = (event: MessageEvent) => {
-      console.log('Received message in iframe:', event.data);
       if (event.data.type === 'CHAT_INITIALIZED') {
         console.log('Received CHAT_INITIALIZED with payload:', event.data.payload);
         setConfig(event.data.payload);
