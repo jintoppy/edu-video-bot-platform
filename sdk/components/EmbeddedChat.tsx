@@ -245,7 +245,11 @@ export function EmbeddedChat({
                 <div className="flex-1 overflow-auto p-4">
                   {uiContent && (
                     <div className="space-y-4">
-                      {uiContent}
+                      {typeof uiContent === 'string' 
+                        ? uiContent
+                        : React.isValidElement(uiContent) 
+                          ? uiContent 
+                          : JSON.stringify(uiContent)}
                     </div>
                   )}
                 </div>
