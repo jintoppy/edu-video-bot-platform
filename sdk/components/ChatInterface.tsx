@@ -1,6 +1,7 @@
 // app/components/chat-interface.tsx
 import React, { useState } from "react";
 import { Message, useChat } from "ai/react";
+import { VideoPlayer } from "./VideoPlayer";
 import { AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { JSONValue } from "ai";
@@ -221,14 +222,22 @@ export function ChatInterface({
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === "user"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100"
-                }`}
-              >
-                {message.content}
+              <div className="space-y-2">
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    message.role === "user"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100"
+                  }`}
+                >
+                  {message.content}
+                </div>
+                {message.role === "assistant" && message.videoUrls && (
+                  <VideoPlayer 
+                    hlsUrl={message.videoUrls.hls_url} 
+                    mp4Url={message.videoUrls.mp4_url}
+                  />
+                )}
               </div>
             </div>
           </div>

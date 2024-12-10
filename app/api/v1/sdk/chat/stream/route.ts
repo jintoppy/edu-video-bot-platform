@@ -1,5 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { JSONValue, StreamData, streamText, tool, ToolExecutionOptions } from 'ai';
+import fetch from 'node-fetch';
 import { z } from 'zod';
 import { programs, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -302,12 +303,51 @@ For irrelevant queries, politely redirect to education-related topics.`;
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 
+async function generateVideo(text: string) {
+  const options = {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      ttsAPIKey: process.env.TTS_API_KEY,
+      simliAPIKey: process.env.SIMLI_API_KEY,
+      faceId: process.env.FACE_ID,
+      user_id: "default",
+      requestBody: {
+        audioProvider: "elevenlabs",
+        text: text,
+        voice: "default",
+        quality: "medium",
+        speed: 1,
+        sample_rate: 44100,
+        voice_engine: "standard",
+        output_format: "mp3",
+        emotion: "neutral",
+        voice_guidance: 1,
+        style_guidance: 1,
+        text_guidance: 1
+      }
+    })
+  };
+
+  try {
+    const response = await fetch('https://api.simli.ai/textToVideoStream', options);
+    return await response.json();
+  } catch (error) {
+    console.error('Error generating video:', error);
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const streamingData = new StreamData();
+  let currentMessage = '';
 
   const result = streamText({
+    onTextContent: (text: string) => {
+      currentMessage += text;
+    },
     model: openai('gpt-4-turbo'),
     system: SYSTEM_PROMPT,
     messages,
@@ -387,5 +427,18 @@ export async function POST(req: Request) {
     
   });
 
-  return result.toDataStreamResponse();
+  const response = result.toDataStreamResponse();
+  
+  // Generate video for the complete message
+  if (currentMessage) {
+    const videoUrls = await generateVideo(currentMessage);
+    if (videoUrls) {
+      streamingData.append({
+        type: 'videoUrls',
+        content: videoUrls
+      });
+    }
+  }
+
+  return response;
 }
