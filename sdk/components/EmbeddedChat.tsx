@@ -123,13 +123,11 @@ export function EmbeddedChat({
 
   return (
     <div 
-      className={`${mode === 'widget' ? 'fixed bottom-4 right-4' : ''} z-50`} 
+      className="h-full w-full" 
       style={themeStyles}
     >
         <div
-          className={`bg-white rounded-lg shadow-xl overflow-hidden ${
-            isMinimized ? "w-72" : "w-[800px] h-[600px]"
-          } flex flex-col`}
+          className="bg-white h-full w-full flex flex-col"
           style={{ fontFamily: theme?.fontFamily }}
         >
           {/* Chat Header */}

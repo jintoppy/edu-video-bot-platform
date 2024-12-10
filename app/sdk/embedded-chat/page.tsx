@@ -62,7 +62,13 @@ export default function EmbeddedChatPage() {
   }
 
   return (
-    <div className="h-screen w-full">
+    <div className="h-screen w-full relative">
+      <button 
+        onClick={() => window.parent.postMessage({ type: 'CHAT_CLOSE' }, '*')}
+        className="absolute top-4 right-4 z-50 p-2 rounded-full hover:bg-gray-100"
+      >
+        <X className="w-5 h-5" />
+      </button>
       <EmbeddedChat 
         apiKey={apiKey}
         sessionId={sessionId || undefined}
