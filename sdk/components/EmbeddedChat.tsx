@@ -70,14 +70,6 @@ export function EmbeddedChat({
   const handleSendMessage = async (content: string) => {
     const api = getApiClient();
 
-    // Add user message immediately
-    const userMessage = {
-      role: "user",
-      content,
-      id: Date.now().toString(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-
     try {
       // Start streaming
       const stream = await api.streamChat(content, sessionId, messages, {
@@ -85,20 +77,26 @@ export function EmbeddedChat({
         programId,
       });
 
+      // Add user message only once
+      const userMessage = {
+        role: "user",
+        content,
+        id: Date.now().toString(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
       for await (const data of stream) {
         switch (data.type) {
           case "session":
             setSessionId(data.sessionId);
             break;
           case "message":
-            setMessages((prev) => {
-              const newMessages = [...prev];
-              // Remove temporary message if it exists
-              if (newMessages[newMessages.length - 1]?.isTemp) {
-                newMessages.pop();
-              }
-              return [...newMessages, ...data.content.messages];
-            });
+            if (data.content.messages?.length > 0) {
+              setMessages((prev) => {
+                const lastMessage = data.content.messages[data.content.messages.length - 1];
+                return [...prev, lastMessage];
+              });
+            }
             break;
           case "ui":
             setUiContent(data.content);
