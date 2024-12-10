@@ -220,19 +220,43 @@ export function EmbeddedChat({
           {/* Chat Content */}
           {!isMinimized && (
             <div className="flex flex-1">
-              <div className="w-1/3 border-r">
-                <img 
-                  src="/counselor-avatar.jpg" 
-                  alt="AI Counselor"
-                  className="w-full aspect-square object-cover"
-                />
+              {/* Left Panel - Video/UI Content */}
+              <div className="w-1/2 border-r flex flex-col">
+                {settings?.features?.videoChat ? (
+                  <div className="aspect-video bg-gray-100 relative">
+                    <video 
+                      id="counselor-video"
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      playsInline
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-video bg-gray-50 flex items-center justify-center">
+                    <img 
+                      src="/counselor-avatar.jpg" 
+                      alt="AI Counselor"
+                      className="w-32 h-32 rounded-full object-cover"
+                    />
+                  </div>
+                )}
+                
+                {/* Generated UI Content */}
+                <div className="flex-1 overflow-auto p-4">
+                  {uiContent && (
+                    <div className="space-y-4">
+                      {uiContent}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="w-2/3 flex flex-col">
+
+              {/* Right Panel - Chat Interface */}
+              <div className="w-1/2 flex flex-col">
                 <ChatInterface
                   messages={messages}
                   onSendMessage={handleSendMessage}
                   isLoading={isLoading}
-                  uiContent={uiContent}
                   theme={theme}
                 />
               </div>
