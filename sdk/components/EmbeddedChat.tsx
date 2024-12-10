@@ -132,12 +132,21 @@ export function EmbeddedChat({
         >
           {/* Chat Header */}
           <div className="flex flex-col">
-            <div className="bg-white px-6 py-4 border-b">
+            <div 
+              className="px-6 py-4 border-b"
+              style={{ 
+                backgroundColor: theme?.primaryColor || '#4A7DFF',
+                color: '#FFFFFF'
+              }}
+            >
               <h2 className="text-xl font-semibold">AI Counselor</h2>
-              <p className="text-sm text-gray-500">Educational Guidance Expert</p>
+              <p className="text-sm opacity-90">Educational Guidance Expert</p>
             </div>
             
-            <div className="flex items-center justify-between px-6 py-3 bg-white border-b">
+            <div 
+              className="flex items-center justify-between px-6 py-3 border-b"
+              style={{ backgroundColor: theme?.secondaryColor || '#F8FAFC' }}
+            >
               <div className="flex items-center space-x-4">
                 <img 
                   src="/counselor-avatar.jpg" 
