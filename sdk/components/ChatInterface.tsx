@@ -40,10 +40,13 @@ export function ChatInterface({
             >
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === "user"
-                    ? `bg-[${theme?.primaryColor ?? 'blue'}] text-white`
-                    : "bg-gray-100 text-gray-900"
+                  message.role === "user" ? "text-white" : "bg-gray-100 text-gray-900"
                 }`}
+                style={
+                  message.role === "user"
+                    ? { backgroundColor: theme?.primaryColor || '#4A7DFF' }
+                    : undefined
+                }
               >
                 {message.content}
               </div>
