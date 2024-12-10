@@ -99,7 +99,13 @@ export function EmbeddedChat({
             }
             break;
           case "ui":
-            setUiContent(data.content);
+            // Handle both string and React element UI content
+            if (typeof data.content === 'string' || React.isValidElement(data.content)) {
+              setUiContent(data.content);
+            } else if (data.content && typeof data.content === 'object') {
+              // Handle structured UI content
+              setUiContent(data.content);
+            }
             break;
         }
       }
@@ -244,10 +250,12 @@ export function EmbeddedChat({
                   {uiContent && (
                     <div className="space-y-4">
                       {typeof uiContent === 'string' 
-                        ? uiContent
+                        ? <div dangerouslySetInnerHTML={{ __html: uiContent }} />
                         : React.isValidElement(uiContent) 
                           ? uiContent 
-                          : JSON.stringify(uiContent)}
+                          : typeof uiContent === 'object'
+                            ? <div dangerouslySetInnerHTML={{ __html: uiContent.content }} />
+                            : JSON.stringify(uiContent)}
                     </div>
                   )}
                 </div>
