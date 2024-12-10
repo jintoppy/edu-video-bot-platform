@@ -1,0 +1,23 @@
+/textToVideoStream
+This endpoint returns a url of an HLS .m3u8 playlist file along with an mp4 file.
+
+Sample Input with elevenlabs audio provider
+
+const options = {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: '{"ttsAPIKey":"<string>","simliAPIKey":"<string>","faceId":"<string>","user_id":"<string>","requestBody":{"audioProvider":"<string>","text":"<string>","voice":"<string>","quality":"<string>","speed":123,"sample_rate":123,"voice_engine":"<string>","output_format":"<string>","emotion":"<string>","voice_guidance":123,"style_guidance":123,"text_guidance":123}}'
+};
+
+fetch('https://api.simli.ai/textToVideoStream', options)
+  .then(response => response.json())
+  .then(response => console.log(response))
+  .catch(err => console.error(err));
+
+Sample Response Body
+
+{
+    "hls_url": "http://api.simli.ai/hls/path-to-file/output.m3u8",
+    "mp4_url": "http://api.simli.ai/mp4/path-to-file/output.mp4"
+}
+

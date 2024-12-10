@@ -1,6 +1,5 @@
 import { openai } from '@ai-sdk/openai';
 import { JSONValue, StreamData, streamText, tool, ToolExecutionOptions } from 'ai';
-import fetch from 'node-fetch';
 import { z } from 'zod';
 import { programs, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -303,7 +302,12 @@ For irrelevant queries, politely redirect to education-related topics.`;
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 
-async function generateVideo(text: string) {
+type StreamResponse = {
+  hls_url: string;
+  mp4_url: string;
+}
+
+async function generateVideo(text: string): Promise<StreamResponse | null> {
   const options = {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -330,8 +334,9 @@ async function generateVideo(text: string) {
   };
 
   try {
-    const response = await fetch('https://api.simli.ai/textToVideoStream', options);
-    return await response.json();
+    const response  = await fetch('https://api.simli.ai/textToVideoStream', options);
+    const data: StreamResponse = await response.json();
+    return data;
   } catch (error) {
     console.error('Error generating video:', error);
     return null;
@@ -436,8 +441,8 @@ export async function POST(req: Request) {
       streamingData.append({
         type: 'videoUrls',
         content: {
-          hls_url: videoUrls.hls_url as string,
-          mp4_url: videoUrls.mp4_url as string
+          hls_url: videoUrls?.hls_url as string,
+          mp4_url: videoUrls?.mp4_url as string
         }
       });
     }
