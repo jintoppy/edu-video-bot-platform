@@ -41,7 +41,7 @@ export function ChatInterface({
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${
                   message.role === "user"
-                    ? "bg-blue-600 text-white"
+                    ? `bg-[${theme?.primaryColor ?? 'blue'}] text-white`
                     : "bg-gray-100 text-gray-900"
                 }`}
               >
@@ -53,7 +53,7 @@ export function ChatInterface({
             {message.role === "assistant" && uiContent && (
               <div className="mt-2">
                 {/* Render UI content here */}
-                <div dangerouslySetInnerHTML={{ __html: uiContent }} />
+                {/* <div dangerouslySetInnerHTML={{ __html: uiContent }} /> */}
               </div>
             )}
           </div>
