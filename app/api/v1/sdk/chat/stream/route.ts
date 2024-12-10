@@ -435,7 +435,10 @@ export async function POST(req: Request) {
     if (videoUrls) {
       streamingData.append({
         type: 'videoUrls',
-        content: videoUrls
+        content: {
+          hls_url: videoUrls.hls_url as string,
+          mp4_url: videoUrls.mp4_url as string
+        }
       });
     }
   }
