@@ -137,6 +137,9 @@ export class EduBot {
             this.sessionId = message.payload.data?.sessionId ?? nanoid();
             this.emit("chatInitialized", message.payload);
             break;
+          case "CHAT_CLOSE":
+            this.endChat();
+            break;
           case "MESSAGE_SENT":
             this.emit("messageSent", message.payload);
             break;
