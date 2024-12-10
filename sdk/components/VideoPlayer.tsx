@@ -7,11 +7,12 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ hlsUrl, mp4Url }: VideoPlayerProps) {
+  const playerRef = React.useRef(null);
   return (
     <ReactHlsPlayer
       src={hlsUrl}
-      fallback={<video src={mp4Url} controls className="w-full rounded-lg" style={{ maxWidth: '320px' }} />}
-      autoPlay={false}
+      playerRef={playerRef}
+      autoPlay={true}
       controls={true}
       width="100%"
       height="auto"

@@ -1,4 +1,5 @@
 import { openai } from '@ai-sdk/openai';
+import { groq } from '@ai-sdk/groq';
 import { JSONValue, StreamData, streamText, tool, ToolExecutionOptions } from 'ai';
 import { z } from 'zod';
 import { programs, users } from '@/lib/db/schema';
@@ -265,7 +266,6 @@ const getRecommendationsTool = tool({
     summary: z.string()
   }),
   execute: async ({ summary }) => {
-    console.log(summary);
     const programs = [{title: 'Sample Pgm', university: 'Sample Uni', details: 'Sample details', match: 0.8, id: 1}];
     const totalResults = programs.length;
 
@@ -281,8 +281,8 @@ const getRecommendationsTool = tool({
 const SYSTEM_PROMPT = `You are an educational counseling assistant. First, collect user's basic information if not already provided.
 
 Always start with:
-1. If this is the first message, use the collectUserInfo tool to get user's name and email
-2. After collecting info, proceed with normal conversation
+1. If this is the first message, get user's name and email
+2. After collecting info, call the collectUserInfo tool, and, proceed with normal conversation
 
 For regular conversations:
 1. Classify user queries into appropriate categories
@@ -314,20 +314,20 @@ async function generateVideo(text: string): Promise<StreamResponse | null> {
     body: JSON.stringify({
       ttsAPIKey: process.env.TTS_API_KEY,
       simliAPIKey: process.env.SIMLI_API_KEY,
-      faceId: process.env.FACE_ID,
-      user_id: "default",
+      faceId: process.env.SIMLI_FACE_ID,
+      user_id: process.env.TTS_USER_ID,
       requestBody: {
-        audioProvider: "elevenlabs",
+        audioProvider: "PlayHT",
         text: text,
-        voice: "default",
-        quality: "medium",
+        voice: "s3://voice-cloning-zero-shot/e5df2eb3-5153-40fa-9f6e-6e27bbb7a38e/original/manifest.json",
+        quality: "draft",
         speed: 1,
-        sample_rate: 44100,
-        voice_engine: "standard",
+        sample_rate: 24000,
+        voice_engine: "PlayHT2.0-turbo",
         output_format: "mp3",
-        emotion: "neutral",
-        voice_guidance: 1,
-        style_guidance: 1,
+        emotion: "female_happy",
+        voice_guidance: 3,
+        style_guidance: 20,
         text_guidance: 1
       }
     })
@@ -350,9 +350,13 @@ export async function POST(req: Request) {
   let currentMessage = '';
 
   const result = streamText({
-    onTextContent: (text: string) => {
-      currentMessage += text;
+    onChunk: ({chunk}) => {
+      // Check if it's a text delta and accumulate the message
+      if (chunk.type === 'text-delta') {
+        currentMessage += chunk.textDelta;
+      }
     },
+    // model: groq('llama-3.3-70b-versatile'),
     model: openai('gpt-4-turbo'),
     system: SYSTEM_PROMPT,
     messages,
@@ -429,24 +433,74 @@ export async function POST(req: Request) {
         }
       },
     },
+    onFinish: async () => {
+      console.log('onFinish');
+      console.log('currentMessage', currentMessage);
+      if (currentMessage.trim()) {
+        const videoUrls = await generateVideo(currentMessage);
+        console.log('videoUrls', videoUrls);
+        if (videoUrls) {
+          streamingData.append({
+            type: 'videoUrls',
+            content: videoUrls
+          });
+        }
+      }
+      streamingData.close();
+    }
     
   });
 
-  const response = result.toDataStreamResponse();
-  
-  // Generate video for the complete message
-  if (currentMessage) {
-    const videoUrls = await generateVideo(currentMessage);
-    if (videoUrls) {
-      streamingData.append({
-        type: 'videoUrls',
-        content: {
-          hls_url: videoUrls?.hls_url as string,
-          mp4_url: videoUrls?.mp4_url as string
-        }
-      });
-    }
-  }
+  return result.toDataStreamResponse({
+    data: streamingData,
+  });
 
-  return response;
+  // const transformStream = new TransformStream({
+  //   async transform(chunk, controller) {
+  //     // Forward the original chunk
+  //     console.log('insisde trasform');
+  //     controller.enqueue(chunk);
+  //   },
+  //   async flush(controller) {
+  //     console.log('inside flush')
+  //     // After all chunks are processed, generate and send video URLs
+  //     if (currentMessage.trim()) {
+  //       console.log('Generating video for message:', currentMessage);
+  //       const videoUrls = await generateVideo(currentMessage);
+  //       console.log('videoUrls', videoUrls);
+  //       if (videoUrls) {
+  //         streamingData.append({
+  //           type: 'videoUrls',
+  //           content: {
+  //             hls_url: videoUrls.hls_url,
+  //             mp4_url: videoUrls.mp4_url
+  //           }
+  //         });
+
+  //         // Get the formatted SSE data from streamingData
+  //         const videoEventData = `data: ${JSON.stringify({
+  //           type: 'videoUrls',
+  //           content: {
+  //             hls_url: videoUrls.hls_url,
+  //             mp4_url: videoUrls.mp4_url
+  //           }
+  //         })}\n\n`;
+          
+  //         controller.enqueue(new TextEncoder().encode(videoEventData));
+  //       }
+  //       streamingData.close();
+  //     }
+  //   }
+  // });
+
+  // // Pipe the original response through our transform stream
+  // const transformedBody = response.body?.pipeThrough(transformStream);
+
+  // return new Response(transformedBody, {
+  //   headers: {
+  //     'Content-Type': 'text/event-stream',
+  //     'Cache-Control': 'no-cache',
+  //     'Connection': 'keep-alive',
+  //   },
+  // });
 }
