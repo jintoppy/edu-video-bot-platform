@@ -128,49 +128,84 @@ export function EmbeddedChat({
     >
         <div
           className={`bg-white rounded-lg shadow-xl overflow-hidden ${
-            isMinimized ? "w-72" : "w-[400px] h-[600px]"
+            isMinimized ? "w-72" : "w-[800px] h-[600px]"
           } flex flex-col`}
           style={{ fontFamily: theme?.fontFamily }}
         >
           {/* Chat Header */}
-          <div
-            className="flex items-center justify-between px-4 py-3 border-b text-white"
-            style={{ backgroundColor: theme?.primaryColor }}
-          >
-            <h3 className="font-semibold text-sm">Student Counseling</h3>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="hover:opacity-80 p-1"
-              >
-                {isMinimized ? (
-                  <Maximize2 className="w-3.5 h-3.5" />
-                ) : (
-                  <Minimize2 className="w-3.5 h-3.5" />
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  onClose?.();
-                }}
-                className="hover:opacity-80 p-1"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+          <div className="flex flex-col">
+            <div className="bg-white px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold">AI Counselor</h2>
+              <p className="text-sm text-gray-500">Educational Guidance Expert</p>
+            </div>
+            
+            <div className="flex items-center justify-between px-6 py-3 bg-white border-b">
+              <div className="flex items-center space-x-4">
+                <img 
+                  src="/counselor-avatar.jpg" 
+                  alt="AI Counselor"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <span className="font-medium">Educational Counselor</span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <button className="p-2 hover:bg-gray-100 rounded-full">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 7l-7 5 7 5V7z"></path>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                  </svg>
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded-full">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  {isMinimized ? (
+                    <Maximize2 className="w-5 h-5" />
+                  ) : (
+                    <Minimize2 className="w-5 h-5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    onClose?.();
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Chat Content */}
           {!isMinimized && (
-            <div className="flex-1 flex flex-col h-[calc(100%-48px)]">
-              <ChatInterface
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                uiContent={uiContent}
-                theme={theme}
-              />
+            <div className="flex flex-1">
+              <div className="w-1/3 border-r">
+                <img 
+                  src="/counselor-avatar.jpg" 
+                  alt="AI Counselor"
+                  className="w-full aspect-square object-cover"
+                />
+              </div>
+              <div className="w-2/3 flex flex-col">
+                <ChatInterface
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  uiContent={uiContent}
+                  theme={theme}
+                />
+              </div>
             </div>
           )}
         </div>
