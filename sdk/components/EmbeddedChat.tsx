@@ -173,13 +173,19 @@ export function EmbeddedChat({
                   )}
                 </button>
                 <button
+                  onClick={() => setIsMinimized(true)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <button
                   onClick={() => {
                     setIsOpen(false);
                     onClose?.();
                   }}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-gray-100 rounded-full text-red-500 hover:bg-red-50"
                 >
-                  <X className="w-5 h-5" />
+                  End Chat
                 </button>
               </div>
             </div>
