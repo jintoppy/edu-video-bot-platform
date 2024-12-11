@@ -1,56 +1,68 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { MessageSquare, Settings, Rocket } from "lucide-react";
+
+const steps = [
+  {
+    icon: MessageSquare,
+    title: "Initial Contact",
+    description: "Express interest and discuss your consultancy's unique needs",
+    items: ["Partnership evaluation", "Custom demo", "Requirement analysis"],
+  },
+  {
+    icon: Settings,
+    title: "Onboarding Process",
+    description: "Seamless setup and customization of your platform",
+    items: ["Organization setup", "Platform customization", "Team training"],
+  },
+  {
+    icon: Rocket,
+    title: "Launch",
+    description: "Go live with full support and optimization",
+    items: ["Go-live support", "Performance monitoring", "Regular check-ins"],
+  },
+];
+
 const HowItWorks = () => {
-    return (
-      <div id="how-it-works" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            Get Started in Minutes
+  return (
+    <section id="how-it-works" className="py-20 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16 animate-fade-up">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Simple Onboarding Process
           </h2>
-          
-          <div className="max-w-4xl mx-auto">
-            <div className="relative">
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-primary/20"></div>
-              
-              {steps.map((step, index) => (
-                <div key={index} className="relative mb-12">
-                  <div className="flex items-center mb-4">
-                    <div className="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                      {index + 1}
-                    </div>
-                  </div>
-                  <div className={`ml-8 md:ml-0 md:w-1/2 ${index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12 md:ml-auto'}`}>
-                    <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                    <p className="text-gray-600">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Get started with EduBot in three simple steps
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {steps.map((step, index) => (
+            <Card 
+              key={index} 
+              className="animate-fade-up relative"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <CardContent className="p-6">
+                <step.icon className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                <p className="text-gray-600 mb-4">{step.description}</p>
+                <ul className="space-y-2">
+                  {step.items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="flex items-center text-gray-600">
+                      <span className="h-1.5 w-1.5 bg-primary rounded-full mr-2"></span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gray-200"></div>
+              )}
+            </Card>
+          ))}
         </div>
       </div>
-    );
-  };
-  
-  const steps = [
-    {
-      title: "Sign Up & Setup",
-      description: "Create your account and complete the initial setup process.",
-    },
-    {
-      title: "Customize Your Platform",
-      description: "Personalize your platform with your branding and preferences.",
-    },
-    {
-      title: "Import Programs",
-      description: "Add your educational programs and course offerings.",
-    },
-    {
-      title: "Train AI Bot",
-      description: "Train your AI assistant with your specific content and requirements.",
-    },
-    {
-      title: "Launch & Scale",
-      description: "Go live with your platform and start engaging with students globally.",
-    },
-  ];
-  
-  export default HowItWorks;
+    </section>
+  );
+};
+
+export default HowItWorks;

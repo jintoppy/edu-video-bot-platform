@@ -1,55 +1,63 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
+  const scrollToContact = () => {
+    const contactSection = document.querySelector('#contact-form');
+    contactSection?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="relative min-h-screen bg-[#f9f7f2] overflow-hidden font-['Roboto']">
-      <div className="container mx-auto px-4 py-20 flex flex-col lg:flex-row items-center justify-between">
-        <div className="lg:w-1/2 space-y-8">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-[#212529]">
-            Transform Your Education Consultancy with AI-Powered Solutions
-          </h1>
-          <p className="text-xl opacity-90 text-[#212529]">
-            Streamline your operations, enhance student engagement, and scale globally with our intelligent platform.
-          </p>
-          <Button size="lg" className="bg-[#ff611d] text-white hover:bg-[#ff611d]/90 text-lg px-8 py-6">
-            Start Free Trial
-          </Button>
-        </div>
-        
-        <div className="lg:w-1/2 mt-12 lg:mt-0">
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-xl animate-float">
-            <img 
-              src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
-              alt="Platform Demo"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <Button variant="ghost" className="text-white text-6xl opacity-80 hover:opacity-100">
-                ▶
+    <div className="min-h-screen flex items-center pt-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="space-y-8 animate-fade-up">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight text-gray-900">
+              Transform Your Education Consultancy with{" "}
+              <span className="text-primary">AI-Powered Solutions</span>
+            </h1>
+            <p className="text-xl text-gray-600">
+              Empower your consultancy with 24/7 AI counseling, seamless program management, and powerful analytics. Partner with EduBot to scale your operations and serve more students globally.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={scrollToContact}>
+                Transform Your Consultancy <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button size="lg" variant="outline" onClick={scrollToContact}>
+                Get Started
               </Button>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-4 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <div className="text-4xl font-bold mb-2 text-[#ff611d]">{stat.value}</div>
-              <div className="text-[#212529]">{stat.label}</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 -mx-4 px-4">
+              <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center text-center">
+                <p className="text-4xl font-bold text-primary mb-2">70%</p>
+                <p className="text-sm text-gray-600">Faster Response Time</p>
+              </div>
+              <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center text-center">
+                <p className="text-4xl font-bold text-primary mb-2">40%</p>
+                <p className="text-sm text-gray-600">Cost Reduction</p>
+              </div>
+              <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center justify-center text-center">
+                <p className="text-3xl font-bold text-primary mb-2">3x</p>
+                <p className="text-sm text-gray-600">More Students Handled</p>
+              </div>
             </div>
-          ))}
+          </div>
+          <div className="relative animate-fade-up [animation-delay:200ms]">
+            <div className="relative z-10">
+              <img
+                src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80"
+                alt="AI Education Platform"
+                className="rounded-lg shadow-2xl"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg transform translate-x-4 translate-y-4 -z-10"></div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
-const stats = [
-  { value: "500+", label: "Consultancies Onboarded" },
-  { value: "50,000+", label: "Students Guided" },
-  { value: "98%", label: "Satisfaction Rate" },
-];
 
 export default Hero;

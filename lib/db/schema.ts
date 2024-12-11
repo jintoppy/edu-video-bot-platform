@@ -10,6 +10,7 @@ import {
   pgEnum,
   vector,
   integer,
+  varchar
 } from "drizzle-orm/pg-core";
 
 export const createVectorExtension = sql`CREATE EXTENSION IF NOT EXISTS vector`;
@@ -225,6 +226,37 @@ export const programs = pgTable("programs", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// db/schema.ts
+
+export const leads = pgTable("leads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  // Contact Information
+  contactName: varchar("contact_name", { length: 100 }).notNull(),
+  consultancyName: varchar("consultancy_name", { length: 200 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  
+  // Business Details
+  operationsScale: text("operations_scale").notNull(),
+  challenges: text("challenges").notNull(),
+  
+  // Status and Tracking
+  status: varchar("status", { length: 50 })
+    .notNull()
+    .default('new'), // new, contacted, qualified, converted, rejected
+  
+  // Optional Additional Data
+  notes: text("notes"),
+  metadata: jsonb("metadata"), // For any additional fields we might want to store
+  
+  // Tracking Fields
+  followUpDate: timestamp("follow_up_date"),
+  lastContactedAt: timestamp("last_contacted_at"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
 export const chatSessions = pgTable("chat_sessions", {

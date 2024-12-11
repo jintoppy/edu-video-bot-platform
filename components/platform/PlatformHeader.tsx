@@ -1,15 +1,22 @@
-'use client';
+"use client";
 
 import { Button } from "@/components/ui/button";
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
 import { useRouter } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { Menu } from "lucide-react";
 import { getUserRole } from "@/app/actions/user";
 import { useEffect, useState } from "react";
 
 const Header = () => {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
   const { isSignedIn, user } = useUser();
   const [dashboardUrl, setDashboardUrl] = useState("");
 
@@ -33,69 +40,168 @@ const Header = () => {
       getDashboardUrl();
     }
   }, [isSignedIn, user?.id]);
-  
+
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    const section = document.querySelector(sectionId);
+    section?.scrollIntoView({ behavior: "smooth" });
+    setIsOpen(false);
   };
 
   return (
-    <header className="w-full py-4 px-6 bg-white border-b fixed top-0 z-50">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="text-2xl font-bold text-[#212529]">EduBot</div>
-        
-        <NavigationMenu>
-          <NavigationMenuList className="hidden md:flex gap-8">
-            <NavigationMenuItem>
-              <NavigationMenuLink 
-                className="text-[#212529]/80 hover:text-[#212529] cursor-pointer" 
-                onClick={() => scrollToSection('features')}
+    <nav className="fixed w-full bg-white/80 backdrop-blur-md z-50 shadow-sm">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          <div className="text-2xl font-bold text-primary">EduBot</div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <button
+              onClick={() => scrollToSection("#features")}
+              className="text-gray-600 hover:text-primary transition-colors"
+            >
+              Features
+            </button>
+            <button
+              onClick={() => scrollToSection("#benefits")}
+              className="text-gray-600 hover:text-primary transition-colors"
+            >
+              Benefits
+            </button>
+            <button
+              onClick={() => scrollToSection("#how-it-works")}
+              className="text-gray-600 hover:text-primary transition-colors"
+            >
+              How It Works
+            </button>
+            <Button
+              variant="default"
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => scrollToSection("#contact-form")}
+            >
+              Get Started
+            </Button>
+            {isSignedIn && dashboardUrl ? (
+              <nav className="flex items-center gap-4">
+                <Link href={dashboardUrl}>
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+                <UserButton />
+              </nav>
+            ) : (
+              <nav className="flex items-center gap-4">
+                <Link href="/sign-in">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+              </nav>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+            <Menu className="h-6 w-6 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden pt-4 pb-2">
+            <div className="flex flex-col space-y-4">
+              <button
+                onClick={() => scrollToSection("#features")}
+                className="text-gray-600 hover:text-primary transition-colors"
               >
                 Features
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink 
-                className="text-[#212529]/80 hover:text-[#212529] cursor-pointer" 
-                onClick={() => scrollToSection('how-it-works')}
+              </button>
+              <button
+                onClick={() => scrollToSection("#benefits")}
+                className="text-gray-600 hover:text-primary transition-colors"
+              >
+                Benefits
+              </button>
+              <button
+                onClick={() => scrollToSection("#how-it-works")}
+                className="text-gray-600 hover:text-primary transition-colors"
               >
                 How It Works
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink 
-                className="text-[#212529]/80 hover:text-[#212529] cursor-pointer" 
-                onClick={() => router.push('/pricing')}
+              </button>
+              <Button
+                variant="default"
+                className="bg-primary hover:bg-primary/90 w-full"
+                onClick={() => scrollToSection("#contact-form")}
               >
-                Pricing
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-
-        {isSignedIn && dashboardUrl ? (
-          <nav className="flex items-center gap-4">
-            <Link href={dashboardUrl}>
-              <Button variant="ghost">Dashboard</Button>
-            </Link>
-            <UserButton />
-          </nav>
-        ) : (
-          <nav className="flex items-center gap-4">
-            <Link href="/sign-in">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Button className="bg-[#ff611d] text-white hover:bg-[#ff611d]/90">
-            Get Started
-          </Button>
-          </nav>
+                Get Started
+              </Button>
+              {isSignedIn && dashboardUrl ? (
+                <Link href={dashboardUrl}>
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+              ) : (
+                <Link href="/sign-in">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+              )}
+            </div>
+          </div>
         )}
-
       </div>
-    </header>
+    </nav>
   );
+
+
+  //   <header className="w-full py-4 px-6 bg-white border-b fixed top-0 z-50">
+  //     <div className="container mx-auto flex items-center justify-between">
+  //       <div className="text-2xl font-bold text-[#212529]">EduBot</div>
+
+  //       <NavigationMenu>
+  //         <NavigationMenuList className="hidden md:flex gap-8">
+  //           <NavigationMenuItem>
+  //             <NavigationMenuLink
+  //               className="text-[#212529]/80 hover:text-[#212529] cursor-pointer"
+  //               onClick={() => scrollToSection('features')}
+  //             >
+  //               Features
+  //             </NavigationMenuLink>
+  //           </NavigationMenuItem>
+  //           <NavigationMenuItem>
+  //             <NavigationMenuLink
+  //               className="text-[#212529]/80 hover:text-[#212529] cursor-pointer"
+  //               onClick={() => scrollToSection('how-it-works')}
+  //             >
+  //               How It Works
+  //             </NavigationMenuLink>
+  //           </NavigationMenuItem>
+  //           <NavigationMenuItem>
+  //             <NavigationMenuLink
+  //               className="text-[#212529]/80 hover:text-[#212529] cursor-pointer"
+  //               onClick={() => router.push('/pricing')}
+  //             >
+  //               Pricing
+  //             </NavigationMenuLink>
+  //           </NavigationMenuItem>
+  //         </NavigationMenuList>
+  //       </NavigationMenu>
+
+  //       {isSignedIn && dashboardUrl ? (
+  //         <nav className="flex items-center gap-4">
+  //           <Link href={dashboardUrl}>
+  //             <Button variant="ghost">Dashboard</Button>
+  //           </Link>
+  //           <UserButton />
+  //         </nav>
+  //       ) : (
+  //         <nav className="flex items-center gap-4">
+  //           <Link href="/sign-in">
+  //             <Button variant="ghost">Sign In</Button>
+  //           </Link>
+  //           <Button className="bg-[#ff611d] text-white hover:bg-[#ff611d]/90">
+  //           Get Started
+  //         </Button>
+  //         </nav>
+  //       )}
+
+  //     </div>
+  //   </header>
+  // );
 };
 
 export default Header;

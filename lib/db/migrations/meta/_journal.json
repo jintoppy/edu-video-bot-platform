@@ -50,6 +50,13 @@
       "when": 1733914169190,
       "tag": "0006_cynical_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1733935043939,
+      "tag": "0007_cute_grandmaster",
+      "breakpoints": true
     }
   ]
 }
