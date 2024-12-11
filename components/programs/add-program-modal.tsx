@@ -203,7 +203,7 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
   }, [schema, form]);
 
   if (!schema) return null;
-
+  console.log(schema);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
