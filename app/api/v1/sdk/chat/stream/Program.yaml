@@ -1,0 +1,103 @@
+Program
+    basic 
+        Ranking
+        University 
+        College
+        Program Name
+    generalInfo
+        Location
+        Public/Private
+        Whats Special About this location
+        Whats Special about this Univ/ College
+        Specialization/ Concentrations Possible
+        Top USP of this Program
+        Curriculum
+        Co-op/ Internship
+    costInfo
+        Glovera Pricing
+        Original Pricing
+        Savings
+        Savings %
+    credits
+        Total Credits
+        IIT/IIM?
+        Credits in IIT/IIM
+        Credits in US
+        Can finish in
+    eligibility
+        UG Background
+        Minimum GPA or %
+        Backlogs
+        Work Experience
+        Will allow 3 years undergrad candidates?
+        Decision Factor
+    applicationRequirements
+        transcriptEvalution
+        LOR
+        SOP
+        Interviews
+        applicationFee
+        deposit
+        isDepositRefundable
+    placement
+        coOp
+        keyCompaniesHiring
+        keyJobRoles
+    isQuantOrQualitative
+
+{
+    basic: {},
+    generalInfo: {},
+    costInfo: {
+        gloveraPricing: '$10,000',
+        originalPricing: '$20,000',
+        savings: '$10,000',
+        savingsPercentage: '50%'
+    },
+    credits: {
+        totalCredits: `"12 units(48 credits)`,
+        iitIim: 'IIT', // IIT/IIM/''
+        creditsInIitIim: 10.5,
+        creditsInUs: 25.5,
+        canFinishIn: '2 years'
+    },
+    eligibility: {
+        ugBackground: `
+            1. 4 years UG Preferred
+            2. 3 years UG also allowed
+            3. Must complete 180 credits
+        `,
+        minimumGPA: `
+            >=65% , Duolingo score required, NAAC 'A' and above
+        `,
+        backlogs: 'Max 4',
+        workExperience: `
+            "No Minimum Requirement
+            Max 8-10 backlogs allowed only if canddiate has 5+ years of experience.
+            Max 5 backlogs allowed in case of freshers."
+        `,
+        willAllow3YearsUndergrad: `
+            Yes, but should be from NAAC A/A+ approved college and 120 minimum credit hours
+        `,
+        decisionFactor: `
+            They look at overall grade, every single course grades and then find corresponding average GPA.
+        `
+    },
+    applicationRequirements: {
+        transcriptEvalution: 'NR', // NR / Student Evaluation / Inhouse Evaluation
+        LOR: 'Minimum of 2 LORs (Professional/Academic)',
+        SOP: 'Written SOP',
+        Interviews: false,
+        applicationFee: '$75', // can be waived also
+        deposit: '$2000',
+        isDepositRefundable: true
+    },
+    placement: {
+        coOp: false,
+        keyCompaniesHiring: ['CVS Health', 'Amazon'],
+        keyJobRoles: ['Health care Data Analytics', 'Marketing Analyst']
+    },
+    isQuantOrQualitative: 'quantitative'  // quantitative/qualitative
+
+}
+

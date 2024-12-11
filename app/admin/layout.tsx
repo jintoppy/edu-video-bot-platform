@@ -59,6 +59,12 @@ const routes = [
     color: "text-violet-500",
   },
   {
+    label: 'Program Schema',
+    icon: Files,
+    href: '/admin/schema-builder',
+    color: "text-violet-500",
+  },
+  {
     label: 'Settings',
     icon: Settings,
     href: '/admin/settings',

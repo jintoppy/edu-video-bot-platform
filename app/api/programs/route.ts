@@ -5,9 +5,7 @@ import { db } from "@/lib/db";
 import { studentProfiles, programs, chatSessions } from "@/lib/db/schema";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const country = searchParams.get("country");
-  const level = searchParams.get("level");
+  const { searchParams } = new URL(req.url);  
   const orgId = searchParams.get("orgId");
 
   if (!orgId) {
@@ -18,9 +16,6 @@ export async function GET(req: Request) {
     eq(programs.isActive, true),
     eq(programs.organizationId, orgId)
   ];
-
-  if (country) conditions.push(eq(programs.country, country));
-  if (level) conditions.push(eq(programs.level, level));
 
   const query = db.select().from(programs).where(and(...conditions));
   const results = await query;

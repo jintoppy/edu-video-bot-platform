@@ -98,6 +98,8 @@ export const organizations = pgTable("organizations", {
   // Subscription/Billing (basic fields - can be expanded)
   planType: text("plan_type").notNull().default("free"),
   subscriptionStatus: text("subscription_status").notNull().default("active"),
+  
+  programSchema: jsonb("program_schema"), 
 
   // Metadata
   metadata: jsonb("metadata"),
@@ -217,18 +219,8 @@ export const studentProfiles = pgTable("student_profiles", {
 
 export const programs = pgTable("programs", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id")
-    .references(() => organizations.id)
-    .notNull(),
-  universityId: uuid("university_id"),
-  name: text("name").notNull(),
-  level: text("level").notNull(),
-  duration: text("duration").notNull(),
-  tuitionFee: real("tuition_fee").notNull(),
-  currency: text("currency").notNull(),
-  country: text("country").notNull(),
-  eligibilityCriteria: jsonb("eligibility_criteria"),
-  description: text("description"),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  data: jsonb("data").notNull(), // Stores the program data in org-specific structure
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
