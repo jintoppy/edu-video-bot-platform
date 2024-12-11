@@ -47,7 +47,7 @@ const Hero = () => {
           <div className="relative animate-fade-up [animation-delay:200ms]">
             <div className="relative z-10">
               <img
-                src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80"
+                src="/hero.jpg"
                 alt="AI Education Platform"
                 className="rounded-lg shadow-2xl"
               />
