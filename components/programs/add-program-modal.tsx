@@ -178,8 +178,17 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
     }
   };
 
-  const onFormSubmit = async (data: any) => {
-    await onSubmit(data);
+  const onFormSubmit = async (formData: any) => {
+    // Extract name from form data
+    const { name, ...sectionData } = formData;
+    
+    // Create properly structured program data
+    const programData = {
+      name,
+      data: sectionData
+    };
+
+    await onSubmit(programData);
     setOpen(false);
     form.reset();
   };
