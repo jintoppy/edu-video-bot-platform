@@ -197,15 +197,18 @@ export function EditProgramModal({ program, schema, onSubmit }: EditProgramModal
     }
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (formData: any) => {
     try {
-      // Transform sectioned data back to flat structure
-      const flatData = Object.entries(data).reduce((acc, [sectionKey, sectionData]) => ({
-        ...acc,
-        ...(sectionData as object)
-      }), {});
+      // Extract name from form data
+      const { name, ...sectionData } = formData;
+      
+      // Create properly structured program data
+      const programData = {
+        name,
+        data: sectionData
+      };
 
-      await onSubmit(program.id, flatData);
+      await onSubmit(program.id, programData);
       setOpen(false);
     } catch (error) {
       console.error('Failed to update program:', error);
