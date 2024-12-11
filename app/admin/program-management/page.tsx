@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard/shell";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -31,6 +32,18 @@ import {
 import { Program } from "@/types/programs";
 import { useOrganization } from "@clerk/nextjs";
 import { getOrganizationSchema } from "@/app/actions/organizations";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { BulkUploadModal } from "./coponents/bulk-upload-modal";
 
 interface StatusBadgeProps {
   status: "Active" | "Inactive";
@@ -69,16 +82,17 @@ const ProgramsManagement: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
+  const { toast } = useToast();
 
   const fetchPrograms = async (orgId: string) => {
-    if(!orgId){
+    if (!orgId) {
       return;
     }
     const programsResponse = await fetch(`/api/programs?orgId=${orgId}`);
     if (!programsResponse.ok) throw new Error("Failed to fetch programs");
     const programsData = await programsResponse.json();
     setPrograms(Array.isArray(programsData) ? programsData : []);
-  }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -169,8 +183,46 @@ const ProgramsManagement: React.FC = () => {
     console.log(event.target.value);
   };
 
-  const handleBulkUpload = (): void => {
-    // Implement bulk upload functionality
+  const handleBulkUpload = async (programs: any[]) => {
+    if (!orgId) return;
+
+    try {
+      // Transform the data to match our API structure
+      const programsToCreate = programs.map((program) => ({
+        data: program,
+        isActive: true,
+        organizationId: orgId,
+      }));
+
+      const response = await fetch("/api/programs/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ programs: programsToCreate }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to bulk upload programs");
+      }
+
+      fetchPrograms(orgId);
+
+      // Show success message
+      toast({
+        title: "Success",
+        description: `Successfully uploaded ${programs.length} programs`,
+      });
+    } catch (error) {
+      console.error("Error uploading programs:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to upload programs",
+        variant: "destructive",
+      });
+    }
   };
 
   // Helper function to get field by path
@@ -272,6 +324,35 @@ const ProgramsManagement: React.FC = () => {
     ));
   };
 
+  const handleDeleteProgram = async (programId: string) => {
+    try {
+      const response = await fetch(`/api/programs/${programId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete program");
+      }
+
+      toast({
+        title: "Success",
+        description: "Deleted program successfully",
+      });
+      // Update your programs list after successful deletion
+      setPrograms((prev) => prev.filter((program) => program.id !== programId));
+    } catch (error) {
+      console.error("Error deleting program:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to delete program",
+        variant: "destructive",
+      });
+      // Handle error (show toast, etc.)
+    }
+  };
+
   return (
     <DashboardShell>
       <DashboardHeader
@@ -279,10 +360,10 @@ const ProgramsManagement: React.FC = () => {
         text="Manage your educational programs and eligibility criteria"
       >
         <div className="flex space-x-2">
-          <Button onClick={() => {}}>
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Upload
-          </Button>
+          <BulkUploadModal
+            schema={organizationSchema}
+            onUpload={handleBulkUpload}
+          />
           <AddProgramModal
             onSubmit={handleAddProgram}
             schema={organizationSchema}
@@ -323,11 +404,47 @@ const ProgramsManagement: React.FC = () => {
                         {program.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
-                    <EditProgramModal
-                      program={program}
-                      onSubmit={handleEditProgram}
-                      schema={organizationSchema}
-                    />
+                    <div>
+                      <EditProgramModal
+                        program={program}
+                        onSubmit={handleEditProgram}
+                        schema={organizationSchema}
+                      />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete the program{" "}
+                              <span className="font-medium">
+                                {program.data?.basic_information?.programName ||
+                                  "Unnamed Program"}
+                              </span>
+                              .
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteProgram(program.id)}
+                              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                   <div className="p-4">
                     {organizationSchema.sections.map((section) => {
