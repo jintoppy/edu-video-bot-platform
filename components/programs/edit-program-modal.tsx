@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -197,8 +198,11 @@ export function EditProgramModal({ program, schema, onSubmit }: EditProgramModal
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (formData: any) => {
     try {
+      setIsSubmitting(true);
       // Extract name from form data
       const { name, ...sectionData } = formData;
       
@@ -212,6 +216,8 @@ export function EditProgramModal({ program, schema, onSubmit }: EditProgramModal
       setOpen(false);
     } catch (error) {
       console.error('Failed to update program:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -257,10 +263,24 @@ export function EditProgramModal({ program, schema, onSubmit }: EditProgramModal
           ))}
           
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => setOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit">Update Program</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Update Program'
+              )}
+            </Button>
           </div>
         </form>
       </DialogContent>
