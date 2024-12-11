@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { getUserRole } from "@/app/actions/user";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const Header = () => {
   const router = useRouter();
@@ -51,7 +52,16 @@ const Header = () => {
     <nav className="fixed w-full bg-white/80 backdrop-blur-md z-50 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <div className="text-2xl font-bold text-primary">EduBot</div>
+          <div className="text-2xl font-bold text-primary">
+            <Link href="/">            
+              <Image
+                src="/bots4ed-logo.png"
+                width={200}
+                height={50}
+                alt="Bot4Edu Logo"
+                />
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
