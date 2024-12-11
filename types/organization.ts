@@ -1,10 +1,9 @@
 // Define all possible field value types
+type Primitive = string | number | boolean;
 export type FieldValue =
-  | string
-  | number
-  | boolean
-  | FieldValue[]
-  | Record<string, FieldValue>;
+  | Primitive
+  | Primitive[]
+  | { [key: string]: FieldValue };
 
 // Schema field types
 export type FieldType =

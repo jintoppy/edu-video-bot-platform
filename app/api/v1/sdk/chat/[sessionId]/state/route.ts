@@ -4,10 +4,8 @@ import { chatSessions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type { ChatSessionMetadata } from "@/types/chat";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
   try {
     const { sessionId } = params;
     const body = await req.json();

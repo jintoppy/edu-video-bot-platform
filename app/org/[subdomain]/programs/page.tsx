@@ -3,11 +3,12 @@ import { ProgramsGrid } from "@/components/programs/programs-grid";
 import Header from "@/components/landing/header";
 import Footer from "@/components/landing/footer";
 
-export default async function DashboardProgramsPage({
-  params,
-}: {
-  params: { subdomain: string };
-}) {
+export default async function DashboardProgramsPage(
+  props: {
+    params: Promise<{ subdomain: string }>;
+  }
+) {
+  const params = await props.params;
   const organization = await getOrganizationBySubdomain(params.subdomain);
 
   const response = await fetch(

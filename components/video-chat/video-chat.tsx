@@ -21,12 +21,12 @@ export function VideoChat({
 }: VideoChatProps) {
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const isSimliInitialised = useRef(false);
-  const videoRef = useRef(null);
-  const audioRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (audioRef.current && videoRef.current && !isSimliInitialised.current) {
-      const SimliConfig = {
+      const SimliConfig: any = {
         apiKey: process.env.NEXT_PUBLIC_SIMLI_API_KEY!,
         faceID: process.env.NEXT_PUBLIC_SIMLI_FACE_ID!,
         handleSilence: true,

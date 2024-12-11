@@ -5,11 +5,12 @@ import { eq } from "drizzle-orm";
 import { LandingPage, landingPages, organizations } from "@/lib/db/schema";
 import OrganizationLandingPage from "@/components/org/OrganizationLandingPage";
 
-export default async function OrgHome({
-  params,
-}: {
-  params: { subdomain: string };
-}) {
+export default async function OrgHome(
+  props: {
+    params: Promise<{ subdomain: string }>;
+  }
+) {
+  const params = await props.params;
 
   console.log('params.subdomain', params.subdomain);
 

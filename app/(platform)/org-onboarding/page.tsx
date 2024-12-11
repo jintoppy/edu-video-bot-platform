@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function OrgOnboardingPage() {
+function OrgOnboardingPageComp() {
   const { isLoaded, signUp, setActive: setActiveSignUp } = useSignUp()
   const { signIn, setActive: setActiveSignIn } = useSignIn()
   const { organization } = useOrganization()
@@ -195,5 +196,13 @@ export default function OrgOnboardingPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function OrgOnboardingPage(){
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OrgOnboardingPageComp />
+    </Suspense>
   )
 }

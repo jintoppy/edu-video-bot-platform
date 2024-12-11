@@ -28,6 +28,11 @@ interface OrganizationSchema {
   programSchema: Record<string, SchemaField>;
 }
 
+interface ProgramFormData {
+  name: string;
+  [key: string]: any; // This allows dynamic section keys
+}
+
 interface EditProgramModalProps {
   program: Program;
   schema: BuilderSchema;
@@ -36,13 +41,13 @@ interface EditProgramModalProps {
 
 export function EditProgramModal({ program, schema, onSubmit }: EditProgramModalProps) {
   const [open, setOpen] = React.useState(false);
-  const form = useForm();
+  const form = useForm<ProgramFormData>();
 
   // Initialize form with program data
   useEffect(() => {
     if (program && open) {
       // Initialize with program name
-      const formData = {
+      const formData: any = {
         name: program.name,
       };
 

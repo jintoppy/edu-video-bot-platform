@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { format } from "date-fns";
 
 interface DocumentData {
@@ -31,7 +31,8 @@ interface DocumentData {
   updatedAt: string;
 }
 
-const AdminDataPage = ({ params }: { params: { id: string } }) => {
+const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
+  const params = use(props.params);
   const router = useRouter();
   const [doc, setDoc] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);

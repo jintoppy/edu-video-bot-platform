@@ -5,9 +5,9 @@ import { eq } from "drizzle-orm";
 
 interface OrganizationLayoutProps {
   children: React.ReactNode;
-  params: {
+  params: Promise<{
     subdomain: string;
-  };
+  }>;
 }
 
 async function getOrganization(subdomain: string) {
@@ -36,10 +36,13 @@ async function getOrganization(subdomain: string) {
   };
 }
 
-export default async function OrganizationLayout({
-  children,
-  params,
-}: OrganizationLayoutProps) {
+export default async function OrganizationLayout(props: OrganizationLayoutProps) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const result = await getOrganization(params.subdomain);
 
   if (!result) {

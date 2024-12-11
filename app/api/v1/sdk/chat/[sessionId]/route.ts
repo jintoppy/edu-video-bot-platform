@@ -4,10 +4,8 @@ import { chatSessions, chatMessages } from "@/lib/db/schema";
 import { eq, and, lt } from "drizzle-orm";
 
 // End session
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
   const { sessionId } = params;
   if (req.url.endsWith('/end')) {
     try {
@@ -30,10 +28,8 @@ export async function POST(
 }
 
 // Validate session
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ sessionId: string }> }) {
+  const params = await props.params;
   const { sessionId } = params;
   if (req.url.endsWith('/validate')) {
     try {

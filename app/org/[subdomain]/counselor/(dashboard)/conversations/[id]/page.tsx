@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { ConversationDetails } from "@/components/admin/conversation-details";
@@ -41,11 +41,12 @@ interface StudentProfile {
   extraCurricular: any;
 }
 
-export default function ConversationPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function ConversationPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = use(props.params);
   const [conversation, setConversation] = useState<ChatSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +130,7 @@ export default function ConversationPage({
   if (error || !conversation) {
     return <div>Error: {error || "Conversation not found"}</div>;
   }
-  
+
 
   return (
     <DashboardShell>

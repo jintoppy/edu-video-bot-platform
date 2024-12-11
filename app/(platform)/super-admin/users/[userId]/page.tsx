@@ -7,11 +7,12 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-export default async function UserDetailsPage({
-  params,
-}: {
-  params: { userId: string };
-}) {
+export default async function UserDetailsPage(
+  props: {
+    params: Promise<{ userId: string }>;
+  }
+) {
+  const params = await props.params;
   const { userId: currentUserId } = await auth();
 
   if (!currentUserId) {

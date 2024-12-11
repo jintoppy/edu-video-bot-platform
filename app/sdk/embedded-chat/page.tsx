@@ -4,12 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { EmbeddedChat } from '@/sdk/components/EmbeddedChat';
 import { useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
+import { Suspense } from 'react'
 
 interface PageProps {
   searchParams: { [key: string]: string | undefined };
 }
 
-export default function EmbeddedChatPage() {
+function EmbeddedChatPageComp() {
   const searchParams = useSearchParams();
   const [initialized, setInitialized] = useState(false);
   const [config, setConfig] = useState<any>(null);
@@ -81,4 +82,12 @@ export default function EmbeddedChatPage() {
       />
     </div>
   );
+}
+
+export default function EmbeddedChatPage(){
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <EmbeddedChatPageComp />
+      </Suspense>
+    )
 }

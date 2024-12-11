@@ -4,10 +4,8 @@ import { checkAuth } from "@/lib/checkAuth";
 import { db } from "@/lib/db";
 import { programs } from "@/lib/db/schema";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const authResult = await checkAuth();
   if (authResult.error || !authResult.user) {
     return NextResponse.json(authResult, { status: 401 });
@@ -32,10 +30,8 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const authResult = await checkAuth();
   if (authResult.error || !authResult.user) {
     return NextResponse.json(authResult, { status: 401 });
