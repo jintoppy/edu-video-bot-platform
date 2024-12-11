@@ -90,7 +90,7 @@ const Header = () => {
             >
               Get Started
             </Button>
-            {isSignedIn && dashboardUrl ? (
+            {/* {isSignedIn && dashboardUrl ? (
               <nav className="flex items-center gap-4">
                 <Link href={dashboardUrl}>
                   <Button variant="ghost">Dashboard</Button>
@@ -103,7 +103,7 @@ const Header = () => {
                   <Button variant="ghost">Sign In</Button>
                 </Link>
               </nav>
-            )}
+            )} */}
           </div>
 
           {/* Mobile Menu Button */}
@@ -141,7 +141,7 @@ const Header = () => {
               >
                 Get Started
               </Button>
-              {isSignedIn && dashboardUrl ? (
+              {/* {isSignedIn && dashboardUrl ? (
                 <Link href={dashboardUrl}>
                   <Button variant="ghost">Dashboard</Button>
                 </Link>
@@ -149,7 +149,7 @@ const Header = () => {
                 <Link href="/sign-in">
                   <Button variant="ghost">Sign In</Button>
                 </Link>
-              )}
+              )} */}
             </div>
           </div>
         )}
