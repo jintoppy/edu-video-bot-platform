@@ -35,6 +35,13 @@ async function handleRequest(auth: any, request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const subdomain = hostname.split('.')[0];
   
+  console.log('hostname', hostname);
+  console.log('subdomain', subdomain);
+  
+  if (!subdomain || subdomain === process.env.NEXT_PUBLIC_APP_URL || subdomain === 'www') {
+    return NextResponse.next();
+  }
+
   // Skip subdomain check for assets and non-SDK API routes
   if (
     url.pathname.startsWith('/_next') || 
