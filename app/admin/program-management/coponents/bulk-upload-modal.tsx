@@ -14,6 +14,17 @@ interface BulkUploadModalProps {
   onUpload: (data: any[]) => Promise<void>;
 }
 
+interface DynamicRecord {
+    [key: string]: {
+      [key: string]: any;
+    };
+  }
+
+interface ValidationError {
+    row: number;
+    errors: string[];
+  }
+
 export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -21,40 +32,50 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
 
-  const validateData = (data: any[]) => {
-    const errors = [];
+  const validateData = (data: DynamicRecord[]): ValidationError[] => {
+    const validationErrors: ValidationError[] = [];
 
-    for (const [index, record] of data.entries()) {
-      schema.sections.forEach(section => {
-        const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
-        const recordSection = record[sectionKey] || {};
-
-        section.fields.forEach(field => {
-          const value = recordSection[field.name];
-          
-          // Check required fields
-          if (field.required && !value) {
-            errors.push(`Row ${index + 1}: Missing required field "${field.label}" in section "${section.name}"`);
-          }
-
-          // Validate enum values
-          if (field.type === 'enum' && value && field.options) {
-            if (!field.options.includes(value)) {
-              errors.push(`Row ${index + 1}: Invalid value "${value}" for field "${field.label}". Allowed values: ${field.options.join(', ')}`);
+    for (let i = 0; i < data.length; i++) {
+        const record = data[i];
+        const rowErrors: string[] = [];
+    
+        schema.sections.forEach(section => {
+          const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
+          const recordSection = record[sectionKey] || {};
+    
+          section.fields.forEach(field => {
+            const value = recordSection[field.name];
+            
+            // Check required fields
+            if (field.required && !value) {
+              rowErrors.push(`Missing required field "${field.label}" in section "${section.name}"`);
             }
-          }
-
-          // Validate number values
-          if (field.type === 'number' && value) {
-            if (isNaN(Number(value))) {
-              errors.push(`Row ${index + 1}: Invalid number value "${value}" for field "${field.label}"`);
+    
+            // Validate enum values
+            if (field.type === 'enum' && value && field.options) {
+              if (!field.options.includes(value)) {
+                rowErrors.push(`Invalid value "${value}" for field "${field.label}". Allowed values: ${field.options.join(', ')}`);
+              }
             }
-          }
+    
+            // Validate number values
+            if (field.type === 'number' && value) {
+              if (isNaN(Number(value))) {
+                rowErrors.push(`Invalid number value "${value}" for field "${field.label}"`);
+              }
+            }
+          });
         });
-      });
-    }
-
-    return errors;
+    
+        if (rowErrors.length > 0) {
+          validationErrors.push({
+            row: i + 1,
+            errors: rowErrors
+          });
+        }
+      }
+    
+      return validationErrors;
   };
 
   const getFlattenedHeaders = () => {
