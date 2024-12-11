@@ -45,7 +45,7 @@ async function handleRequest(auth: any, request: NextRequest) {
   }
 
   // Handle subdomain routing for organizations
-  if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'localhost:3000') {
+  if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== process.env.NEXT_PUBLIC_APP_URL) {
     const newUrl = new URL(`/org/${subdomain}${url.pathname}`, request.url);
     return NextResponse.rewrite(newUrl);
   }  
