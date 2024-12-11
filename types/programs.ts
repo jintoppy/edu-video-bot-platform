@@ -202,6 +202,7 @@ export interface ProgramEligibilityForm {
 
 export interface Program {
   id: string;
+  name: string;
   organizationId: string;
   data: Record<string, any>; // The shape of this will match programSchema
   isActive: boolean;

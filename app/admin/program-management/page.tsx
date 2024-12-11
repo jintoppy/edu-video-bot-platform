@@ -65,6 +65,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 };
 
 interface NewProgramData {
+  name: string;
   data: Record<string, any>;
   isActive: boolean;
   organizationId: string;
@@ -122,8 +123,7 @@ const ProgramsManagement: React.FC = () => {
     if (!orgId) return;
 
     const newProgram: NewProgramData = {
-      name: programData.name,
-      data: programData,
+      ...programData,
       isActive: true,
       organizationId: orgId,
     };
@@ -141,15 +141,7 @@ const ProgramsManagement: React.FC = () => {
         const error = await response.json().catch(() => null);
         throw new Error(error?.message || "Failed to add program");
       }
-
-      const newProgramData = await response.json();
-      setPrograms((prev) => [...prev, newProgramData]);
-
-      // Refresh programs list
-      const updatedResponse = await fetch(`/api/programs?orgId=${orgId}`);
-      if (!updatedResponse.ok) {
-        throw new Error("Failed to refresh programs");
-      }
+     
       fetchPrograms(orgId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add program");
@@ -157,13 +149,14 @@ const ProgramsManagement: React.FC = () => {
   };
 
   const handleEditProgram = async (programId: string, programData: any) => {
+    if(!orgId) return;
     try {
       const response = await fetch("/api/programs", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: programId, data: programData }),
+        body: JSON.stringify({ id: programId, ...programData }),
       });
 
       if (!response.ok) {
@@ -171,9 +164,7 @@ const ProgramsManagement: React.FC = () => {
       }
 
       // Refresh programs list
-      const updatedResponse = await fetch("/api/programs");
-      const updatedData = await updatedResponse.json();
-      setPrograms(updatedData);
+      fetchPrograms(orgId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update program");
     }

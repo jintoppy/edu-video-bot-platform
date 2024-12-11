@@ -19,7 +19,6 @@ export async function GET(req: Request) {
         userFullName: users.fullName,
         userEmail: users.email,
         programName: programs.name,
-        programLevel: programs.level,
         chatSessionId: chatSessions.id,
         chatSessionSummary: chatSessions.summary,
         chatSessionStartTime: chatSessions.startTime,

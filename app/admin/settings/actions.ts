@@ -334,8 +334,7 @@ export async function createApiKey(data: ApiKeyCreate) {
     allowedDomains: data.allowedDomains,
     allowedIps: data.allowedIps,
     monthlyQuota: data.monthlyQuota,
-    createdBy: userId,
-    updatedBy: userId,
+    isActive: true
   }).returning();
 
   revalidatePath("/admin/settings");

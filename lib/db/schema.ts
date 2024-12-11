@@ -219,6 +219,7 @@ export const studentProfiles = pgTable("student_profiles", {
 
 export const programs = pgTable("programs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
   organizationId: uuid("organization_id").references(() => organizations.id),
   data: jsonb("data").notNull(), // Stores the program data in org-specific structure
   isActive: boolean("is_active").default(true),

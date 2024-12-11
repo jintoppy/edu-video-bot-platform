@@ -50,7 +50,7 @@ export function ApiKeySettings() {
       name: "",
       allowedDomains: "",
       allowedIps: "",
-      monthlyQuota: "",
+      monthlyQuota: 0,
     },
   });
 

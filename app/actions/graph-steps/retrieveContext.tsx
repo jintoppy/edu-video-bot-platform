@@ -68,7 +68,7 @@ export async function retrieveContext(state: GraphStateType) {
 
       const programResults = await db.select()
         .from(programs)
-        .where(like(programs.name, `%${programName.content.toString().trim()}%`));
+        // .where(like(programs.data.sections, `%${programName.content.toString().trim()}%`));
       context = programResults;
       break;
     }
@@ -77,10 +77,7 @@ export async function retrieveContext(state: GraphStateType) {
         where: eq(studentProfiles.userId, state.metadata.userId),
       });
 
-      const conditions = [eq(programs.isActive, true)]
-      if(profile?.desiredLevel){
-        conditions.push(eq(programs.level, profile.desiredLevel));
-      }
+      const conditions = [eq(programs.isActive, true)]     
 
       const recommendations = await db.select()
         .from(programs)

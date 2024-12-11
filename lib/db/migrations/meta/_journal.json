@@ -43,6 +43,13 @@
       "when": 1733890552829,
       "tag": "0005_true_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1733914169190,
+      "tag": "0006_cynical_yellowjacket",
+      "breakpoints": true
     }
   ]
 }

@@ -223,7 +223,6 @@ export async function getOrganizationSchema(clerkOrgId: string) {
               name: 'Basic Information',
               isExpanded: true,
               fields: [
-                { name: 'programName', label: 'Program Name', type: 'text', required: true },
                 { name: 'university', label: 'University', type: 'text', required: true }
               ]
             }

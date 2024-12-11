@@ -28,7 +28,7 @@ export async function POST(
       .set({
         updatedAt: new Date(),
         metadata: {
-          ...session.metadata,
+          ...(session.metadata || {}),
           lastActive: body.lastActive,
         } as ChatSessionMetadata,
       })
