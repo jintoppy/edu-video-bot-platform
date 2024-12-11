@@ -48,21 +48,24 @@ export function EditProgramModal({ program, schema, onSubmit }: EditProgramModal
   // Initialize form with program data
   useEffect(() => {
     if (program && open) {
+      // Initialize with program name
+      const formData = {
+        name: program.name,
+      };
+
       // Transform program data to match section structure
-      const sectionData = schema.sections.reduce((acc, section) => {
+      schema.sections.forEach(section => {
         const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
-        const sectionFields = section.fields.reduce((fieldAcc, field) => ({
-          ...fieldAcc,
-          [field.name]: program.data[field.name]
-        }), {});
+        formData[sectionKey] = {};
         
-        return {
-          ...acc,
-          [sectionKey]: sectionFields
-        };
-      }, {});
+        section.fields.forEach(field => {
+          // Get the value from program.data using the section key
+          const value = program.data[sectionKey]?.[field.name];
+          formData[sectionKey][field.name] = value !== undefined ? value : getDefaultValue(field);
+        });
+      });
       
-      form.reset(sectionData);
+      form.reset(formData);
     }
   }, [program, open, form, schema]);
 
