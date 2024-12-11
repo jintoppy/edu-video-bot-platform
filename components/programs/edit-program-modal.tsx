@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from '@/components/ui/switch'
 import { useForm } from "react-hook-form"
 import { BuilderSchema, DefaultValueType } from '@/types/organization'
+import { Program } from '@/types/programs'
 
 interface SchemaField {
   type: "text" | "number" | "boolean" | "array" | "object" | "enum";
@@ -24,15 +25,6 @@ interface OrganizationSchema {
   id: string;
   name: string;
   programSchema: Record<string, SchemaField>;
-}
-
-interface Program {
-  id: string;
-  organizationId: string;
-  data: Record<string, any>;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface EditProgramModalProps {
