@@ -39,7 +39,8 @@ async function handleRequest(auth: any, request: NextRequest) {
   console.log('hostname', hostname);
   console.log('subdomain', subdomain);
 
-  if(request.url === process.env.NEXT_PUBLIC_APP_URL) {
+
+  if(request.url === `${process.env.NEXT_PUBLIC_APP_URL}/`) {
     return NextResponse.next();
   }
   
