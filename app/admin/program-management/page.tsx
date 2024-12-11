@@ -122,6 +122,7 @@ const ProgramsManagement: React.FC = () => {
     if (!orgId) return;
 
     const newProgram: NewProgramData = {
+      name: programData.name,
       data: programData,
       isActive: true,
       organizationId: orgId,
@@ -391,8 +392,7 @@ const ProgramsManagement: React.FC = () => {
                   <div className="p-4 bg-gray-50 flex justify-between items-center">
                     <div className="flex items-center space-x-4">
                       <span className="font-medium">
-                        {program.data?.basic_information?.programName ||
-                          "Unnamed Program"}
+                        {program.name}
                       </span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${

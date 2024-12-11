@@ -229,6 +229,15 @@ export function EditProgramModal({ program, schema, onSubmit }: EditProgramModal
           <DialogTitle>Edit Program</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Label>Program Name<span className="text-red-500">*</span></Label>
+            <Input
+              {...form.register('name')}
+              defaultValue={program.name}
+              placeholder="Enter program name"
+              required
+            />
+          </div>
           {schema.sections.map((section) => (
             <div key={section.name} className="space-y-4">
               <h3 className="text-lg font-semibold">{section.name}</h3>

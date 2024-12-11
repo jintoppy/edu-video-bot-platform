@@ -38,6 +38,11 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     for (let i = 0; i < data.length; i++) {
         const record = data[i];
         const rowErrors: string[] = [];
+
+        // Validate required name field
+        if (!record.name) {
+          rowErrors.push('Program name is required');
+        }
     
         schema.sections.forEach(section => {
           const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
