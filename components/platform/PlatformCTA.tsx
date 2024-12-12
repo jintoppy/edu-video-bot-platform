@@ -16,7 +16,7 @@ const CTA = () => {
           Ready to Transform Your Education Consultancy?
         </h2>
         <p className="text-xl mb-8 text-[#212529]/90">
-          Join hundreds of successful consultancies using EduBot to scale their
+          Join hundreds of successful consultancies using Bots4Ed to scale their
           operations.
         </p>
         <Button

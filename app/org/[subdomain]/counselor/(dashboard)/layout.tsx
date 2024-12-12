@@ -38,7 +38,7 @@ export default function DashboardLayout({
           <div className="flex h-14 items-center px-4 border-b border-gray-800">
             <Link href="/" className="flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-white" />
-              <span className="text-xl font-bold text-white">EduBot</span>
+              <span className="text-xl font-bold text-white">Bots4Ed</span>
             </Link>
           </div>
           <div className="flex-1 flex flex-col overflow-y-auto">

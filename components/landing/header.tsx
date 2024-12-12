@@ -66,7 +66,7 @@ export default function Header() {
           className="flex gap-3 items-center text-2xl font-bold"
           style={{ color: settings.theme.primaryColor }}
         >
-          <GraduationCap className="h-6 w-6" /> EduBot AI
+          <GraduationCap className="h-6 w-6" /> Bots4Ed AI
         </Link>
         <nav className="hidden md:flex space-x-4">
           <Link

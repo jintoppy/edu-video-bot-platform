@@ -1,6 +1,6 @@
-# EduBot - AI-Powered Educational Assistant
+# Bots4Ed - AI-Powered Educational Assistant
 
-EduBot is a Next.js application that provides an intelligent educational assistant platform with video chat capabilities and AI-powered interactions.
+Bots4Ed is a Next.js application that provides an intelligent educational assistant platform with video chat capabilities and AI-powered interactions.
 
 Live Demo: [https://edubot-buildathon.vercel.app/](https://edubot-buildathon.vercel.app/)
 
@@ -95,4 +95,7 @@ For any questions or issues, please open a GitHub issue or contact the developme
 Org Admin: 
 ideaadmin@mailto.plus
 Ljs8#23$
+
+
+https://www.youtube.com/shorts/nXj0m2iL9DI
 

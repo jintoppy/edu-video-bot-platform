@@ -1,7 +1,7 @@
 import '@/sdk/styles/embedded.css';
 
 export const metadata = {
-  title: 'EduBot Chat',
+  title: 'Bots4Ed Chat',
   description: 'Educational Counseling Chat',
 };
 

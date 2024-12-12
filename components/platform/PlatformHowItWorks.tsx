@@ -31,7 +31,7 @@ const HowItWorks = () => {
             Simple Onboarding Process
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Get started with EduBot in three simple steps
+            Get started with Bots4Ed in three simple steps
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">

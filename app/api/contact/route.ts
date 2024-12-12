@@ -49,18 +49,18 @@ export async function POST(req: Request) {
 
     // 3. Send auto-response to the lead
     await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'jinto@bots4ed.com',
       to: email,
-      subject: 'Thank you for your interest in EduBot',
+      subject: 'Thank you for your interest in Bots4Ed',
       html: `
         <h1>Thank you for reaching out!</h1>
         <p>Dear ${name},</p>
         <p>Thank you for your interest in transforming ${consultancy} with our AI-powered education consultancy platform.</p>
-        <p>Our team will review your information and get back to you within 1-2 business days to discuss how we can help achieve your goals.</p>
+        <p>Our team will review your information and get back to you soon to discuss how we can help achieve your goals.</p>
         <p>In the meantime, if you have any urgent questions, please don't hesitate to reply to this email.</p>
         <br/>
         <p>Best regards,</p>
-        <p>The EduBot Team</p>
+        <p>The Bots4Ed Team</p>
       `
     });
 

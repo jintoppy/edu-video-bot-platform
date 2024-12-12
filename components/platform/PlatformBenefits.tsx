@@ -37,7 +37,7 @@ const Benefits = () => {
             Transform Your Consultancy
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join hundreds of education consultancies already revolutionizing their operations with EduBot
+            Join hundreds of education consultancies already revolutionizing their operations with Bots4Ed
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

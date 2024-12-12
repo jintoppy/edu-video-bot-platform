@@ -8,7 +8,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "EduBot - AI-Powered International Education Counseling",
+  title: "Bots4Ed - AI-Powered International Education Counseling",
   description:
     "Get personalized education guidance through AI-powered video interactions",
 };

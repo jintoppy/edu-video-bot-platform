@@ -11,7 +11,7 @@ const Footer = () => {
             <h3 className="text-2xl font-bold text-white mb-4">
               <Link href="/">
                 <Image
-                  src="/bots4ed-logo-dark.png"
+                  src="/bots4ed-logo-white.png"
                   width={200}
                   height={50}
                   alt="Bot4Edu Logo"
@@ -90,7 +90,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-          <p>&copy; {new Date().getFullYear()} EduBot. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Bots4Ed. All rights reserved.</p>
         </div>
       </div>
     </footer>

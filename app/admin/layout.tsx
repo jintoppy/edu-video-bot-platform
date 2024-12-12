@@ -105,7 +105,7 @@ export default function DashboardLayout({
                 <span className={cn("text-xl font-bold text-white transition-opacity duration-300", 
                   isCollapsed && !isExpanded ? "opacity-0" : "opacity-100"
                 )}>
-                  EduBot
+                  Bots4Ed
                 </span>
               </Link>
               <Button

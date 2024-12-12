@@ -6,7 +6,7 @@ import { UpcomingSessions } from "@/components/dashboard/upcoming-sessions"
 import { ProfileCompletion } from "@/components/dashboard/profile-completion"
 
 export const metadata: Metadata = {
-  title: "Dashboard | EduBot",
+  title: "Dashboard | Bots4Ed",
   description: "Manage your educational journey",
 }
 

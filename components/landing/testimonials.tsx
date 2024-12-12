@@ -8,13 +8,13 @@ const testimonials = [
   {
     name: "Sarah L.",
     role: "International Student",
-    content: "EduBot AI made my journey to study abroad so much easier. The personalized guidance was invaluable!",
+    content: "Bots4Ed AI made my journey to study abroad so much easier. The personalized guidance was invaluable!",
     avatar: "SL"
   },
   {
     name: "Michael T.",
     role: "University Counselor",
-    content: "As a counselor, I'm impressed by how EduBot AI complements our work and provides 24/7 support to students.",
+    content: "As a counselor, I'm impressed by how Bots4Ed AI complements our work and provides 24/7 support to students.",
     avatar: "MT"
   },
   {
