@@ -174,18 +174,36 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           const startRow = 3;
           const lastRow = range.e.r;
 
+          // Get headers from row 2 (index 1) which contains our actual headers
+          const headers = XLSX.utils.sheet_to_json(sheet, {
+            range: 1, // Second row contains our headers
+            header: 1
+          })[0] as string[];
+
           // Only process if we have data rows after the template rows
           if (lastRow >= startRow) {
             const jsonData = XLSX.utils.sheet_to_json(sheet, { 
               range: { s: { r: startRow, c: 0 }, e: { r: lastRow, c: range.e.c } },
               defval: "", // Default empty value for missing cells
-              header: getFlattenedHeaders() // Use predefined headers
+              header: headers // Use headers from the template file
             });
-            console.log("Raw data from file:", jsonData);
-            resolve(jsonData);
+            
+            // Map the data to match our expected structure
+            const mappedData = jsonData.map((row: any) => {
+              const mappedRow: Record<string, any> = {};
+              Object.entries(row).forEach(([key, value]) => {
+                // Skip empty cells
+                if (value === "") return;
+                mappedRow[key.trim()] = value;
+              });
+              return mappedRow;
+            });
+
+            console.log("Mapped data:", mappedData);
+            resolve(mappedData);
           } else {
             resolve([]); // Return empty array if no data rows found
-          }         
+          }
         } catch (error) {
           reject(error);
         }
