@@ -32,45 +32,42 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
 
-  const validateData = (data: DynamicRecord[]): ValidationError[] => {
+  const validateData = (data: any[]): ValidationError[] => {
     const validationErrors: ValidationError[] = [];
 
-    for (let i = 0; i < data.length; i++) {
-        const record = data[i];
-        const rowErrors: string[] = [];
+    data.forEach((record, index) => {
+      const rowErrors: string[] = [];
 
-        // Validate required name field
-        if (!record.name) {
-          rowErrors.push('Program name is required');
-        }
-    
-        schema.sections.forEach(section => {
-          const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
-          const recordSection = record[sectionKey] || {};
-    
-          section.fields.forEach(field => {
-            const value = recordSection[field.name];
-            
-            // Check required fields
-            if (field.required && !value) {
-              rowErrors.push(`Missing required field "${field.label}" in section "${section.name}"`);
+      // Validate required name field
+      if (!record.name) {
+        rowErrors.push('Program name is required');
+      }
+
+      // Validate other fields based on schema
+      schema.sections.forEach(section => {
+        section.fields.forEach(field => {
+          const value = record[`${section.name.toLowerCase().replace(/\s+/g, '_')}.${field.name}`];
+          
+          // Check required fields
+          if (field.required && !value && value !== 0) {
+            rowErrors.push(`Missing required field "${field.label}" in section "${section.name}"`);
+          }
+
+          // Validate enum values
+          if (field.type === 'enum' && value && field.options) {
+            if (!field.options.includes(value)) {
+              rowErrors.push(`Invalid value "${value}" for field "${field.label}". Allowed values: ${field.options.join(', ')}`);
             }
-    
-            // Validate enum values
-            if (field.type === 'enum' && value && field.options) {
-              if (!field.options.includes(value)) {
-                rowErrors.push(`Invalid value "${value}" for field "${field.label}". Allowed values: ${field.options.join(', ')}`);
-              }
+          }
+
+          // Validate number values
+          if (field.type === 'number' && value) {
+            if (isNaN(Number(value))) {
+              rowErrors.push(`Invalid number value "${value}" for field "${field.label}"`);
             }
-    
-            // Validate number values
-            if (field.type === 'number' && value) {
-              if (isNaN(Number(value))) {
-                rowErrors.push(`Invalid number value "${value}" for field "${field.label}"`);
-              }
-            }
-          });
+          }
         });
+      });
     
         if (rowErrors.length > 0) {
           validationErrors.push({
@@ -248,17 +245,21 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
 
   const restructureData = (flatData: Record<string, any>[]) => {
     return flatData.map(row => {
-      const structured: Record<string, any> = {};
+      const structured: Record<string, any> = {
+        name: row.name,
+        data: {}
+      };
       
       Object.entries(row).forEach(([key, value]) => {
+        if (key === 'name') return;
+        
         const [section, field] = key.split('.');
-        if (!structured[section]) {
-          structured[section] = {};
+        if (!structured.data[section]) {
+          structured.data[section] = {};
         }
-        structured[section][field] = value;
+        structured.data[section][field] = value;
       });
-  
-      console.log('Structured data:', structured);
+
       return structured;
     });
   };
