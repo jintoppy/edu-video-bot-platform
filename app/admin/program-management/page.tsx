@@ -181,7 +181,7 @@ const ProgramsManagement: React.FC = () => {
     try {
       // Transform the data to match our API structure
       const programsToCreate = programs.map((program) => ({
-        data: program,
+        ...program,
         isActive: true,
         organizationId: orgId,
       }));
