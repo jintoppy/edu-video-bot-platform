@@ -185,28 +185,12 @@ export function EmbeddedChat({
         style={{ fontFamily: theme?.fontFamily }}
       >
         {/* Chat Header */}
-        <div className="flex flex-col">
+        <div className="flex flex-col">          
           <div
-            className="px-6 py-4 border-b"
-            style={{
-              backgroundColor: theme?.primaryColor || "#4A7DFF",
-              color: "#FFFFFF",
-            }}
-          >
-            <h2 className="text-xl font-semibold">AI Counselor</h2>
-            <p className="text-sm opacity-90">Educational Guidance Expert</p>
-          </div>
-
-          <div
-            className="flex items-center justify-between px-6 py-3 border-b"
+            className="flex items-center justify-between px-8 mr-4 py-3 border-b"
             style={{ backgroundColor: theme?.secondaryColor || "#F8FAFC" }}
           >
-            <div className="flex items-center space-x-4">
-              <img
-                src="/counselor-avatar.jpg"
-                alt="AI Counselor"
-                className="w-12 h-12 rounded-full object-cover"
-              />
+            <div className="flex items-center space-x-4">              
               <span className="font-medium">Educational Counselor</span>
             </div>
 
@@ -248,12 +232,6 @@ export function EmbeddedChat({
                 ) : (
                   <Minimize2 className="w-5 h-5" />
                 )}
-              </button>
-              <button
-                onClick={() => setIsMinimized(true)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X className="w-5 h-5" />
               </button>
               <button
                 onClick={() => {
