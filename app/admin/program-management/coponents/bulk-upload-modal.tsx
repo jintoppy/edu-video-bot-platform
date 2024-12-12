@@ -167,9 +167,15 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           // Skip the description row (second row) by starting from index 2
+          // Get the range of the sheet
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+          const lastRow = range.e.r;
+
+          // Skip instruction and header rows, start from the last row which contains example/real data
           const jsonData = XLSX.utils.sheet_to_json(sheet, { 
-            range: 1,  // Start from second row (after headers)
-            defval: "" // Default empty value for missing cells
+            range: lastRow,  // Only process the last row which contains actual data
+            defval: "", // Default empty value for missing cells
+            header: getFlattenedHeaders() // Use predefined headers
           });
           console.log("Raw data from file:", jsonData);
           resolve(jsonData);
