@@ -195,11 +195,11 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     templateRows.push(headers);
   
     // Add empty row as template
-    const emptyRow = Object.keys(headers).reduce((acc, header) => {
-      acc[header] = '';
-      return acc;
-    }, {} as Record<string, string>);
-    templateRows.push(emptyRow);
+    // const emptyRow = Object.keys(headers).reduce((acc, header) => {
+    //   acc[header] = '';
+    //   return acc;
+    // }, {} as Record<string, string>);
+    // templateRows.push(emptyRow);
   
     // Add example row
     const exampleRow = Object.keys(headers).reduce((acc, header) => {
