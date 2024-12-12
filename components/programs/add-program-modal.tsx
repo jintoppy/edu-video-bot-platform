@@ -40,7 +40,11 @@ interface AddProgramModalProps {
 
 export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
   const [open, setOpen] = React.useState(false);
-  const form = useForm();
+  const form = useForm({
+    defaultValues: {
+      name: '',
+    }
+  });
 
   const renderField = (
     field: SchemaField,
@@ -194,25 +198,27 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
   };
 
   useEffect(() => {
-    if (schema) {
-      const defaultValues = schema.sections.reduce((acc, section) => {
-        const sectionDefaults = section.fields.reduce((fieldAcc, field) => ({
-          ...fieldAcc,
-          [field.name]: getDefaultValue(field)
-        }), {});
-        
-        return {
-          ...acc,
-          [section.name.toLowerCase().replace(/\s+/g, '_')]: sectionDefaults
-        };
-      }, {});
+    if (schema && open) {
+      const defaultValues = {
+        name: '',
+        ...schema.sections.reduce((acc, section) => {
+          const sectionDefaults = section.fields.reduce((fieldAcc, field) => ({
+            ...fieldAcc,
+            [field.name]: getDefaultValue(field)
+          }), {});
+          
+          return {
+            ...acc,
+            [section.name.toLowerCase().replace(/\s+/g, '_')]: sectionDefaults
+          };
+        }, {})
+      };
       
       form.reset(defaultValues);
     }
-  }, [schema, form]);
+  }, [schema, open]); // Remove form from dependencies
 
   if (!schema) return null;
-  console.log(schema);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
