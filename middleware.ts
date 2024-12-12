@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)', 
   '/sign-up(.*)', 
   '/', 
+  '/about-us',
+  '/privacy-policy', 
   '/api/webhooks', 
   '/counselor/signup',
   '/org-onboarding',
@@ -32,8 +34,11 @@ async function handleRequest(auth: any, request: NextRequest) {
   }
 
   const url = new URL(request.url);
-  const hostname = request.headers.get('host') || '';
+  const hostname = url.hostname;
   const subdomain = hostname.split('.')[0];
+
+  const currentHomeUrl = new URL(process.env.NEXT_PUBLIC_APP_URL!);
+  const homeUrlSubDomain = currentHomeUrl.hostname.split('.')[0];
   
   console.log('request.url', request.url);
   console.log('hostname', hostname);
@@ -44,9 +49,9 @@ async function handleRequest(auth: any, request: NextRequest) {
     return NextResponse.next();
   }
   
-  if (!subdomain || subdomain === process.env.NEXT_PUBLIC_APP_URL || subdomain === 'www') {
-    return NextResponse.next();
-  }
+  // if (!subdomain || subdomain === process.env.NEXT_PUBLIC_APP_URL || subdomain === 'www') {
+  //   return NextResponse.next();
+  // }
 
   // Skip subdomain check for assets and non-SDK API routes
   if (
@@ -58,7 +63,8 @@ async function handleRequest(auth: any, request: NextRequest) {
   }
 
   // Handle subdomain routing for organizations
-  if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== process.env.NEXT_PUBLIC_APP_URL) {
+  if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== homeUrlSubDomain) {
+    console.log('inside subdomain routing');
     const newUrl = new URL(`/org/${subdomain}${url.pathname}`, request.url);
     return NextResponse.rewrite(newUrl);
   }  

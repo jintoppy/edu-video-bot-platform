@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Linkedin, Mail } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Mail, Youtube } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -55,7 +55,7 @@ const Footer = () => {
             <h4 className="font-semibold text-white mb-4">Company</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="/about-us" className="hover:text-white transition-colors">
                   About Us
                 </a>
               </li>
@@ -65,7 +65,7 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="/privacy-policy" className="hover:text-white transition-colors">
                   Privacy Policy
                 </a>
               </li>
@@ -83,8 +83,8 @@ const Footer = () => {
               <a href="#" className="hover:text-white transition-colors">
                 <Linkedin className="h-6 w-6" />
               </a>
-              <a href="#" className="hover:text-white transition-colors">
-                <Mail className="h-6 w-6" />
+              <a href="https://www.youtube.com/@bots4ed" target="_blank" className="hover:text-white transition-colors">
+                <Youtube className="h-6 w-6" />
               </a>
             </div>
           </div>
