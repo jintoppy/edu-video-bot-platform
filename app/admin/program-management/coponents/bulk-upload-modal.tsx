@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
-import * as XLSX from 'xlsx';
-import { BuilderSchema } from '@/types/organization';
+import * as XLSX from "xlsx";
+import { BuilderSchema } from "@/types/organization";
 
 interface BulkUploadModalProps {
   schema: BuilderSchema;
@@ -15,15 +21,15 @@ interface BulkUploadModalProps {
 }
 
 interface DynamicRecord {
-    [key: string]: {
-      [key: string]: any;
-    };
-  }
+  [key: string]: {
+    [key: string]: any;
+  };
+}
 
 interface ValidationError {
-    row: number;
-    errors: string[];
-  }
+  row: number;
+  errors: string[];
+}
 
 export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const [open, setOpen] = useState(false);
@@ -40,51 +46,62 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
 
       // Validate required name field
       if (!record.name) {
-        rowErrors.push('Program name is required');
+        rowErrors.push("Program name is required");
       }
 
       // Validate other fields based on schema
-      schema.sections.forEach(section => {
-        section.fields.forEach(field => {
-          const value = record[`${section.name.toLowerCase().replace(/\s+/g, '_')}.${field.name}`];
-          
+      schema.sections.forEach((section) => {
+        section.fields.forEach((field) => {
+          const value =
+            record[
+              `${section.name.toLowerCase().replace(/\s+/g, "_")}.${field.name}`
+            ];
+
           // Check required fields
           if (field.required && !value && value !== 0) {
-            rowErrors.push(`Missing required field "${field.label}" in section "${section.name}"`);
+            rowErrors.push(
+              `Missing required field "${field.label}" in section "${section.name}"`
+            );
           }
 
           // Validate enum values
-          if (field.type === 'enum' && value && field.options) {
+          if (field.type === "enum" && value && field.options) {
             if (!field.options.includes(value)) {
-              rowErrors.push(`Invalid value "${value}" for field "${field.label}". Allowed values: ${field.options.join(', ')}`);
+              rowErrors.push(
+                `Invalid value "${value}" for field "${
+                  field.label
+                }". Allowed values: ${field.options.join(", ")}`
+              );
             }
           }
 
           // Validate number values
-          if (field.type === 'number' && value) {
+          if (field.type === "number" && value) {
             if (isNaN(Number(value))) {
-              rowErrors.push(`Invalid number value "${value}" for field "${field.label}"`);
+              rowErrors.push(
+                `Invalid number value "${value}" for field "${field.label}"`
+              );
             }
           }
         });
       });
-    
-        if (rowErrors.length > 0) {
-          validationErrors.push({
-            row: i + 1,
-            errors: rowErrors
-          });
-        }
+
+      if (rowErrors.length > 0) {
+        validationErrors.push({
+          row: i + 1,
+          errors: rowErrors,
+        });
       }
-    
-      return validationErrors;
+    });
+
+    return validationErrors;
   };
 
   const getFlattenedHeaders = () => {
     const headers: string[] = [];
-    schema.sections.forEach(section => {
-      const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
-      section.fields.forEach(field => {
+    schema.sections.forEach((section) => {
+      const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
+      section.fields.forEach((field) => {
         headers.push(`${sectionKey}.${field.name}`);
       });
     });
@@ -93,44 +110,48 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
 
   const createEmptyTemplateRow = () => {
     const row: Record<string, string> = {};
-    getFlattenedHeaders().forEach(header => {
-      row[header] = '';
+    getFlattenedHeaders().forEach((header) => {
+      row[header] = "";
     });
     return row;
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setError(null);
     const file = event.target.files?.[0];
     if (!file) return;
-  
-    const fileType = file.name.split('.').pop()?.toLowerCase();
-    if (!['csv', 'xlsx', 'xls'].includes(fileType || '')) {
-      setError('Please upload a CSV or Excel file');
+
+    const fileType = file.name.split(".").pop()?.toLowerCase();
+    if (!["csv", "xlsx", "xls"].includes(fileType || "")) {
+      setError("Please upload a CSV or Excel file");
       return;
     }
-  
+
     setFile(file);
     setIsLoading(true);
-  
+
     try {
       const flatData = await readFile(file);
-      console.log('Flat data:', flatData);
-      
+      console.log("Flat data:", flatData);
+
       // Restructure the flat data into nested format
       const structuredData = restructureData(flatData);
-      console.log('Structured data before validation:', structuredData);
-      
+      console.log("Structured data before validation:", structuredData);
+
       const validationErrors = validateData(structuredData);
       if (validationErrors.length > 0) {
-        setError(`Validation errors:\n${validationErrors.join('\n')}`);
+        setError(`Validation errors:\n${validationErrors.join("\n")}`);
         return;
       }
-  
+
       setPreviewData(structuredData);
     } catch (err) {
-      console.error('Error processing file:', err);
-      setError('Error reading file. Please ensure it matches the template format.');
+      console.error("Error processing file:", err);
+      setError(
+        "Error reading file. Please ensure it matches the template format."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -142,12 +163,12 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       reader.onload = async (e) => {
         try {
           const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
+          const workbook = XLSX.read(data, { type: "binary" });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           // Skip the description row (second row) by starting from index 2
           const jsonData = XLSX.utils.sheet_to_json(sheet, { range: 2 });
-          console.log('Raw data from file:', jsonData);
+          console.log("Raw data from file:", jsonData);
           resolve(jsonData);
         } catch (error) {
           reject(error);
@@ -168,7 +189,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       setFile(null);
       setPreviewData([]);
     } catch (err) {
-      setError('Failed to upload programs. Please try again.');
+      setError("Failed to upload programs. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -177,83 +198,88 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const downloadTemplate = () => {
     // Create headers and example row
     const templateRows = [];
-    
+
     // Add headers
     const headers: Record<string, string> = {
-      'name': 'Program Name (Required)' // Add mandatory name field first
+      name: "Program Name (Required)", // Add mandatory name field first
     };
-    schema.sections.forEach(section => {
-      const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
-      section.fields.forEach(field => {
+    schema.sections.forEach((section) => {
+      const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
+      section.fields.forEach((field) => {
         const header = `${sectionKey}.${field.name}`;
         let description = field.label;
-        if (field.required) description += ' (Required)';
+        if (field.required) description += " (Required)";
         headers[header] = description;
       });
     });
     templateRows.push(headers);
-  
+
     // Add empty row as template
     // const emptyRow = Object.keys(headers).reduce((acc, header) => {
     //   acc[header] = '';
     //   return acc;
     // }, {} as Record<string, string>);
     // templateRows.push(emptyRow);
-  
+
     // Add example row
     const exampleRow = Object.keys(headers).reduce((acc, header) => {
-      if (header === 'name') {
-        acc[header] = 'Example Program Name';
+      if (header === "name") {
+        acc[header] = "Example Program Name";
       } else {
-        const [section, field] = header.split('.');
+        const [section, field] = header.split(".");
         acc[header] = `Example ${field}`;
       }
       return acc;
     }, {} as Record<string, string>);
     templateRows.push(exampleRow);
-  
+
     // Create workbook
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(templateRows);
-    XLSX.utils.book_append_sheet(wb, ws, 'Template');
-  
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+
     // Add instructions sheet
     const instructionsData = [
       {
-        'Column Header': 'name',
-        'Field Name': 'Program Name',
-        'Required': 'Yes',
-        'Type': 'text',
-        'Description': 'Name of the program (Required)'
+        "Column Header": "name",
+        "Field Name": "Program Name",
+        Required: "Yes",
+        Type: "text",
+        Description: "Name of the program (Required)",
       },
-      ...schema.sections.map(section => {
-      const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
-      return section.fields.map(field => ({
-        'Column Header': `${sectionKey}.${field.name}`,
-        'Field Name': field.label,
-        'Required': field.required ? 'Yes' : 'No',
-        'Type': field.type,
-        'Description': `Field for ${field.label}${field.required ? ' (Required)' : ''}`
-      }));
-    }).flat()];
-  
+      ...schema.sections
+        .map((section) => {
+          const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
+          return section.fields.map((field) => ({
+            "Column Header": `${sectionKey}.${field.name}`,
+            "Field Name": field.label,
+            Required: field.required ? "Yes" : "No",
+            Type: field.type,
+            Description: `Field for ${field.label}${
+              field.required ? " (Required)" : ""
+            }`,
+          }));
+        })
+        .flat(),
+    ];
+
     const wsInstructions = XLSX.utils.json_to_sheet(instructionsData);
-    XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions');
-  
-    XLSX.writeFile(wb, 'program_template.xlsx');
+    XLSX.utils.book_append_sheet(wb, wsInstructions, "Instructions");
+
+    XLSX.writeFile(wb, "program_template.xlsx");
   };
 
   const restructureData = (flatData: Record<string, any>[]) => {
-    return flatData.map(row => {
+    return flatData.map((row) => {
       const structured: Record<string, any> = {
         name: row.name,
-        data: {}
+        data: {},
       };
-      
+
       Object.entries(row).forEach(([key, value]) => {
-        if (key === 'name') return;
-        
-        const [section, field] = key.split('.');
+        if (key === "name") return;
+
+        const [section, field] = key.split(".");
         if (!structured.data[section]) {
           structured.data[section] = {};
         }
@@ -305,7 +331,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                {error.split('\n').map((line, i) => (
+                {error.split("\n").map((line, i) => (
                   <div key={i}>{line}</div>
                 ))}
               </AlertDescription>
