@@ -169,14 +169,23 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           // Skip the description row (second row) by starting from index 2
           // Get the range of the sheet
           const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+          
+          // Start from row 4 (index 3) onwards to skip instructions, headers, and example
+          const startRow = 3;
           const lastRow = range.e.r;
 
-          // Skip instruction and header rows, start from the last row which contains example/real data
-          const jsonData = XLSX.utils.sheet_to_json(sheet, { 
-            range: lastRow,  // Only process the last row which contains actual data
-            defval: "", // Default empty value for missing cells
-            header: getFlattenedHeaders() // Use predefined headers
-          });
+          // Only process if we have data rows after the template rows
+          if (lastRow >= startRow) {
+            const jsonData = XLSX.utils.sheet_to_json(sheet, { 
+              range: { s: { r: startRow, c: 0 }, e: { r: lastRow, c: range.e.c } },
+              defval: "", // Default empty value for missing cells
+              header: getFlattenedHeaders() // Use predefined headers
+            });
+            console.log("Raw data from file:", jsonData);
+            resolve(jsonData);
+          } else {
+            resolve([]); // Return empty array if no data rows found
+          }
           console.log("Raw data from file:", jsonData);
           resolve(jsonData);
         } catch (error) {
