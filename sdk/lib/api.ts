@@ -6,7 +6,7 @@ export class ApiClient {
   private apiKey: string;
   private baseUrl: string;
 
-  constructor(apiKey: string, baseUrl: string = 'http://localhost:3000') {
+  constructor(apiKey: string, baseUrl: string = 'https://www.bots4ed.com') {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
   }
