@@ -182,7 +182,9 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     const templateRows = [];
     
     // Add headers
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'name': 'Program Name (Required)' // Add mandatory name field first
+    };
     schema.sections.forEach(section => {
       const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
       section.fields.forEach(field => {
@@ -203,8 +205,12 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   
     // Add example row
     const exampleRow = Object.keys(headers).reduce((acc, header) => {
-      const [section, field] = header.split('.');
-      acc[header] = `Example ${field}`;
+      if (header === 'name') {
+        acc[header] = 'Example Program Name';
+      } else {
+        const [section, field] = header.split('.');
+        acc[header] = `Example ${field}`;
+      }
       return acc;
     }, {} as Record<string, string>);
     templateRows.push(exampleRow);
@@ -215,7 +221,15 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     XLSX.utils.book_append_sheet(wb, ws, 'Template');
   
     // Add instructions sheet
-    const instructionsData = schema.sections.map(section => {
+    const instructionsData = [
+      {
+        'Column Header': 'name',
+        'Field Name': 'Program Name',
+        'Required': 'Yes',
+        'Type': 'text',
+        'Description': 'Name of the program (Required)'
+      },
+      ...schema.sections.map(section => {
       const sectionKey = section.name.toLowerCase().replace(/\s+/g, '_');
       return section.fields.map(field => ({
         'Column Header': `${sectionKey}.${field.name}`,
@@ -224,7 +238,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         'Type': field.type,
         'Description': `Field for ${field.label}${field.required ? ' (Required)' : ''}`
       }));
-    }).flat();
+    }).flat()];
   
     const wsInstructions = XLSX.utils.json_to_sheet(instructionsData);
     XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions');
