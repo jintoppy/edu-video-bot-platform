@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 // import { Analytics } from '@vercel/analytics/react'
+import { Analytics } from '@vercel/analytics/next';
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,7 +32,7 @@ export default function RootLayout({
             {children}
             <Toaster />
           </ThemeProvider>
-          {/* <Analytics /> */}
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
