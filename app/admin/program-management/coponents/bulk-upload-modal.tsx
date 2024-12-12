@@ -185,9 +185,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
             resolve(jsonData);
           } else {
             resolve([]); // Return empty array if no data rows found
-          }
-          console.log("Raw data from file:", jsonData);
-          resolve(jsonData);
+          }         
         } catch (error) {
           reject(error);
         }
