@@ -40,7 +40,10 @@ interface AddProgramModalProps {
 
 export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
   const [open, setOpen] = React.useState(false);
-  const form = useForm({
+  const form = useForm<{
+    name: string;
+    [key: string]: any;
+  }>({
     defaultValues: {
       name: '',
     }
@@ -50,7 +53,7 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
     field: SchemaField,
     path: string,
   ): React.ReactNode => {
-    const fieldValue = form.watch(path);
+    const fieldValue = form.watch(path as any);
 
     switch (field.type) {
       case "text":
@@ -182,7 +185,7 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
     }
   };
 
-  const onFormSubmit = async (formData: any) => {
+  const onFormSubmit = async (formData: Record<string, any>) => {
     // Extract name from form data
     const { name, ...sectionData } = formData;
     
@@ -235,7 +238,7 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
           <div className="space-y-2">
             <Label>Program Name<span className="text-red-500">*</span></Label>
             <Input
-              {...form.register('name')}
+              {...form.register('name' as const)}
               placeholder="Enter program name"
               required
             />
