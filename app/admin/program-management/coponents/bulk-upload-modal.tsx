@@ -57,11 +57,11 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
 
       // Validate other fields based on schema
       schema.sections.forEach((section) => {
+        const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
+        const sectionData = record.data?.[sectionKey];
+
         section.fields.forEach((field) => {
-          const value =
-            record[
-              `${section.name.toLowerCase().replace(/\s+/g, "_")}.${field.name}`
-            ];
+          const value = sectionData?.[field.name];
 
           // Check required fields
           if (field.required && !value && value !== 0) {
@@ -74,9 +74,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           if (field.type === "enum" && value && field.options) {
             if (!field.options.includes(value)) {
               rowErrors.push(
-                `Invalid value "${value}" for field "${
-                  field.label
-                }". Allowed values: ${field.options.join(", ")}`
+                `Invalid value "${value}" for field "${field.label}" in section "${section.name}". Allowed values: ${field.options.join(", ")}`
               );
             }
           }
@@ -85,7 +83,25 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           if (field.type === "number" && value) {
             if (isNaN(Number(value))) {
               rowErrors.push(
-                `Invalid number value "${value}" for field "${field.label}"`
+                `Invalid number value "${value}" for field "${field.label}" in section "${section.name}"`
+              );
+            }
+          }
+
+          // Validate array values
+          if (field.type === "array" && value) {
+            if (!Array.isArray(value)) {
+              rowErrors.push(
+                `Invalid array value for field "${field.label}" in section "${section.name}"`
+              );
+            }
+          }
+
+          // Validate object values
+          if (field.type === "object" && value) {
+            if (typeof value !== "object" || Array.isArray(value)) {
+              rowErrors.push(
+                `Invalid object value for field "${field.label}" in section "${section.name}"`
               );
             }
           }
