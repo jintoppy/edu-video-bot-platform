@@ -167,7 +167,10 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           // Skip the description row (second row) by starting from index 2
-          const jsonData = XLSX.utils.sheet_to_json(sheet, { range: 2 });
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { 
+            range: 1,  // Start from second row (after headers)
+            defval: "" // Default empty value for missing cells
+          });
           console.log("Raw data from file:", jsonData);
           resolve(jsonData);
         } catch (error) {
@@ -198,6 +201,12 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const downloadTemplate = () => {
     // Create headers and example row
     const templateRows = [];
+    
+    // Add description row
+    const descriptionRow: Record<string, string> = {
+      name: "Instructions: Fill in the program details below. Required fields are marked with (Required)"
+    };
+    templateRows.push(descriptionRow);
 
     // Add headers
     const headers: Record<string, string> = {
@@ -221,13 +230,25 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     // }, {} as Record<string, string>);
     // templateRows.push(emptyRow);
 
-    // Add example row
+    // Add example row with more meaningful examples
     const exampleRow = Object.keys(headers).reduce((acc, header) => {
       if (header === "name") {
-        acc[header] = "Example Program Name";
+        acc[header] = "Master of Business Administration";
       } else {
         const [section, field] = header.split(".");
-        acc[header] = `Example ${field}`;
+        switch (field?.toLowerCase()) {
+          case "duration":
+            acc[header] = "2 years";
+            break;
+          case "tuition":
+            acc[header] = "50000";
+            break;
+          case "location":
+            acc[header] = "New York";
+            break;
+          default:
+            acc[header] = `Example ${field}`;
+        }
       }
       return acc;
     }, {} as Record<string, string>);
