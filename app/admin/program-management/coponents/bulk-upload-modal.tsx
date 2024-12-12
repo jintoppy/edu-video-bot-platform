@@ -170,13 +170,13 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           // Get the range of the sheet
           const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
           
-          // Start from row 4 (index 3) onwards to skip instructions, headers, and example
-          const startRow = 3;
+          // Start from row 4 (index 3) onwards to skip headers, instructions, and header labels
+          const startRow = 3; // Index 3 is the 4th row where actual data starts
           const lastRow = range.e.r;
 
-          // Get headers from row 2 (index 1) which contains our actual headers
+          // Get headers from row 1 (index 0) which contains our column headers
           const headers = XLSX.utils.sheet_to_json(sheet, {
-            range: 1, // Second row contains our headers
+            range: 0, // First row contains our headers
             header: 1
           })[0] as string[];
 
@@ -230,29 +230,47 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   };
 
   const downloadTemplate = () => {
-    // Create headers and example row
+    // Create template rows
     const templateRows = [];
     
-    // Add description row
-    const descriptionRow: Record<string, string> = {
+    // Add column headers first (actual field names)
+    const headers: Record<string, string> = {
+      name: "name", // Add name field first
+    };
+    schema.sections.forEach((section) => {
+      const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
+      section.fields.forEach((field) => {
+        const header = `${sectionKey}.${field.name}`;
+        headers[header] = header;
+      });
+    });
+    templateRows.push(headers);
+
+    // Add instructions row
+    const instructionsRow: Record<string, string> = {
       name: "Instructions: Fill in the program details below. Required fields are marked with (Required)"
     };
-    templateRows.push(descriptionRow);
+    Object.keys(headers).forEach(key => {
+      if (key !== 'name') {
+        instructionsRow[key] = "";
+      }
+    });
+    templateRows.push(instructionsRow);
 
-    // Add headers
-    const headers: Record<string, string> = {
+    // Add header labels row
+    const headerLabels: Record<string, string> = {
       name: "Program Name (Required)", // Add mandatory name field first
     };
     schema.sections.forEach((section) => {
       const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
       section.fields.forEach((field) => {
         const header = `${sectionKey}.${field.name}`;
-        let description = field.label;
-        if (field.required) description += " (Required)";
-        headers[header] = description;
+        let label = field.label;
+        if (field.required) label += " (Required)";
+        headerLabels[header] = label;
       });
     });
-    templateRows.push(headers);
+    templateRows.push(headerLabels);
 
     // Add empty row as template
     // const emptyRow = Object.keys(headers).reduce((acc, header) => {
