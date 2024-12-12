@@ -38,6 +38,12 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
 
+  const reset = () => {
+    setError(null);
+    setFile(null);
+    setPreviewData([]);
+  }
+
   const validateData = (data: any[]): ValidationError[] => {
     const validationErrors: ValidationError[] = [];
 
@@ -88,7 +94,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
 
       if (rowErrors.length > 0) {
         validationErrors.push({
-          row: i + 1,
+          row: index + 1,
           errors: rowErrors,
         });
       }
@@ -141,6 +147,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       console.log("Structured data before validation:", structuredData);
 
       const validationErrors = validateData(structuredData);
+      console.log(validationErrors);
       if (validationErrors.length > 0) {
         setError(`Validation errors:\n${validationErrors.join("\n")}`);
         return;
@@ -425,7 +432,10 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           <div className="flex justify-end space-x-2">
             <Button
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                reset();
+                setOpen(false);
+              }}
               disabled={isLoading}
             >
               Cancel
