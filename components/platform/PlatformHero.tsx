@@ -10,11 +10,11 @@ const Hero = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center pt-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen flex items-center pt-24 md:pt-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8 animate-fade-up">
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight text-gray-900">
+            <h1 className="text-4xl md:text-6xl text-center md:text-left font-bold leading-tight text-gray-900">
               Transform Your Education Consultancy with{" "}
               <span className="text-primary">AI-Powered Solutions</span>
             </h1>

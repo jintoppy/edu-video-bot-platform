@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function PrivacyPolicy() {
   return (
-    <div className="flex-1 py-16 lg:py-24">
+    <div className="flex-1 py-16 pt-24">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="space-y-8">
           <div className="space-y-4">
