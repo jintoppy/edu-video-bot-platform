@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@100mslive/server-sdk": "^0.3.0",
     "@ai-sdk/groq": "^1.0.8",
     "@ai-sdk/openai": "^1.0.4",
     "@clerk/backend": "^1.21.0",
