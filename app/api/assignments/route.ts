@@ -5,6 +5,7 @@ import { counselorAssignments, users, programs, chatSessions } from "@/lib/db/sc
 import { checkAuth } from "@/lib/checkAuth";
 
 export async function GET(req: Request) {
+  console.log('assignments');
   const authResult = await checkAuth();
   if (authResult.error || !authResult.user) {
     return NextResponse.json(authResult, { status: 401 });

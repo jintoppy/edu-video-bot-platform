@@ -96,6 +96,8 @@ Org Admin:
 ideaadmin@mailto.plus
 Ljs8#23$
 
+ideacounselor@mailto.plus
+Ljs8#23$
 
 https://www.youtube.com/shorts/nXj0m2iL9DI
 

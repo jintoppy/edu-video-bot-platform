@@ -4,6 +4,7 @@ import { useSignUp } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useParams } from 'next/navigation'
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,6 +26,7 @@ const signupSchema = z.object({
 type SignupForm = z.infer<typeof signupSchema>;
 
 function CounselorSignup() {
+  const {subdomain} = useParams<{ subdomain: string }>()
   const searchParams = useSearchParams();
   const { signUp, isLoaded, setActive } = useSignUp();
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +95,7 @@ function CounselorSignup() {
         await setActive({ session: result.createdSessionId });
 
         // Redirect to counselor dashboard
-        router.push("/counselor/dashboard");
+        router.push(`/org/${subdomain}`);
       }
     } catch (error) {
       console.error("Error in signup:", error);

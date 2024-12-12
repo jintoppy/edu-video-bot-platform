@@ -50,7 +50,7 @@ export default async function OrgHome(
     case "student":
       redirect(`/org/${params.subdomain}/dashboard`);
     case "counselor":
-      redirect(`/org/${params.subdomain}/counselor/dashboard`);
+      redirect(`/org/${params.subdomain}/counselor`);
     default:
       return <OrganizationLandingPage landingPage={landingPage} />
   }

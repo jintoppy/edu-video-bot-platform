@@ -1,14 +1,34 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { counselorInvitations } from '@/lib/db/schema';
+import { counselorInvitations, organizations } from '@/lib/db/schema';
 import { clerkClient } from '@/lib/clerk';
 import { checkAuth } from '@/lib/checkAuth';
+import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   try {
     const authResult = await checkAuth();
     if (authResult.error || !authResult.user){
         return NextResponse.json(authResult, { status: authResult.status });
+    }
+
+    const userOrgId = authResult.user.organizationId;
+    if (!userOrgId) {
+      return NextResponse.json(
+        { error: 'No organization found for user' },
+        { status: 400 }
+      );
+    }
+
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, userOrgId),
+    });
+
+    if(!org || !org.subdomain) {
+      return NextResponse.json(
+        { error: 'No organization found for user' },
+        { status: 400 }
+      );
     }
     
     const { name, email } = await req.json();
@@ -29,7 +49,7 @@ export async function POST(req: Request) {
     // Create Clerk invitation with custom redirect URL
     const clerkInvitation = await clerkClient.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/counselor/signup?email=${email}`,
+      redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/org/${org.subdomain}/counselor/signup?email=${email}`,
       publicMetadata: {
         role: 'counselor'
       },

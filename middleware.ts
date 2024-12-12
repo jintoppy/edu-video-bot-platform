@@ -11,7 +11,7 @@ const isPublicRoute = createRouteMatcher([
   '/about-us',
   '/privacy-policy', 
   '/api/webhooks', 
-  '/counselor/signup',
+  '/org/:subdomain/counselor/signup',
   '/org-onboarding',
   '/org/:subdomain',
   '/org/:subdomain/programs',

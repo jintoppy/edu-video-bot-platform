@@ -317,7 +317,22 @@ export const counselorProfiles = pgTable("counselor_profiles", {
   specializations: jsonb("specializations").$type<string[]>(),
   availability: jsonb("availability"), // Store availability schedule
   biography: text("biography"),
-  active: boolean("active").default(true),
+  isOnline: boolean("is_online").default(false),
+  lastActiveAt: timestamp("last_active_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const videoSessions = pgTable("video_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  chatSessionId: uuid("chat_session_id").references(() => chatSessions.id),
+  counselorId: uuid("counselor_id").references(() => counselorProfiles.id),
+  studentId: uuid("student_id").references(() => users.id),
+  roomName: text("room_name").notNull(),
+  status: text("status").notNull(), // requested, accepted, ongoing, completed, declined
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  summary: text("summary"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
