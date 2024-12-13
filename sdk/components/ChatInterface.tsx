@@ -31,6 +31,16 @@ export function ChatInterface({
   handleSubmit,
 }: ChatInterfaceProps) {
 
+  const userMessageStyle = {
+    flexDirection: "row-reverse" as any,
+    gap: '10px'
+  }
+
+  const botMessageStyle = {
+    flexDirection: "",
+    gap: '10px'
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-50">
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -41,6 +51,7 @@ export function ChatInterface({
               className={`flex items-start gap-2.5 ${
                 message.role === "user" ? "flex-row-reverse" : "flex-row"
               }`}
+              style={message.role === "user" ? userMessageStyle : botMessageStyle}
             >
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full ${

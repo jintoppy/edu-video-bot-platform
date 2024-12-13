@@ -260,10 +260,7 @@ export class EduBot {
     widgetButton.innerHTML = `
       <div class="edubot-widget-button-closed">
         <div class="edubot-widget-icon">💬</div>
-      </div>
-      <div class="edubot-widget-button-opened">
-        <div class="edubot-widget-close">×</div>
-      </div>
+      </div>      
     `;
 
     widgetButton.addEventListener("click", () => {

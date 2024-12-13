@@ -38,7 +38,12 @@ For counselor requests:
 For general questions, use provided context to give accurate information.
 For specific programs, provide detailed program information.
 For recommendations, gather student profile details before making suggestions.
-For irrelevant queries, politely redirect to education-related topics.`;
+For irrelevant queries, politely redirect to education-related topics.
+
+Important Notes: 
+  1. DO Not make up wrong information.
+  2. If there is any confusion or unclear information, suggest to arrange a callback from Human Counselor.
+`;
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 

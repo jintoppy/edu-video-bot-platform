@@ -76,6 +76,7 @@ export function EmbeddedChat({
 
   console.log("sessionId", sessionId);
   console.log("orgId", orgId);
+  console.log('theme', theme)
 
   const {
     messages,
@@ -164,11 +165,8 @@ export function EmbeddedChat({
 
   useEffect(() => {
     if (!sessionId) return;
-
-    
-
-    const channel = pusher.subscribe(`chat-${sessionId}`);
-
+    // const channel = pusher.subscribe(`chat-${sessionId}`);
+    const channel = {bind: (str:string, fn:any) => {}, }
     // channel.bind("text-chunk", (data: { text: string }) => {
     //   // Handle incoming text chunks
     //   append({
