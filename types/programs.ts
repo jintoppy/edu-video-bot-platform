@@ -205,6 +205,7 @@ export interface Program {
   name: string;
   organizationId: string;
   data: Record<string, any>; // The shape of this will match programSchema
+  eligibility: Record<string, any>;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

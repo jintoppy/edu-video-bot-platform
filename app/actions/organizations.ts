@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import type { User } from "@clerk/backend";
 import { currentUser } from "@clerk/nextjs/server"; 
 import { eq, or } from "drizzle-orm";
-import { BuilderSchema, FieldType, SchemaField, SchemaSection } from "@/types/organization";
+import { BuilderSchema, EligibilityField, FieldType, GetSchemaResponse, SchemaField, SchemaSection } from "@/types/organization";
 
 function ensureFieldType(type: string): FieldType {
   const validTypes = ['text', 'number', 'boolean', 'array', 'object', 'enum'] as const;
@@ -15,6 +15,42 @@ function ensureFieldType(type: string): FieldType {
     return type as FieldType;
   }
   return 'text'; // Default to text if invalid type
+}
+
+function cleanSchemaForDB(schema: BuilderSchema): BuilderSchema {
+  // Create a clean version of sections
+  const cleanSections = schema.sections.map(section => ({
+    name: section.name,
+    isExpanded: false, // Reset UI state
+    fields: section.fields.map(field => ({
+      name: field.name,
+      type: field.type,
+      required: field.required,
+      options: field.options,
+      fields: field.fields,
+      arrayType: field.arrayType,
+      label: field.label,
+      section: section.name
+    }))
+  }));
+
+  // Create a clean version of eligibility criteria if it exists
+  const cleanEligibilityCriteria = schema.eligibilityCriteria ? {
+    isExpanded: false, // Reset UI state
+    fields: schema.eligibilityCriteria.fields.map(field => ({
+      name: field.name,
+      label: field.label,
+      type: field.type,
+      required: field.required,
+      validation: field.validation,
+      operator: field.operator
+    }))
+  } : undefined;
+
+  return {
+    sections: cleanSections,
+    eligibilityCriteria: cleanEligibilityCriteria
+  };
 }
 
 function convertBuilderToFlatSchema(builderSchema: BuilderSchema): Record<string, SchemaField> {
@@ -27,7 +63,29 @@ function convertBuilderToFlatSchema(builderSchema: BuilderSchema): Record<string
       return fieldAcc;
     }, {} as Record<string, SchemaField>);
 
-    return { ...acc, ...sectionFields };
+    return {
+      sections: builderSchema.sections.map(section => ({
+        name: section.name,
+        fields: section.fields.reduce((fieldAcc, field) => {
+          fieldAcc[field.name] = {
+            ...field,
+            section: section.name
+          };
+          return fieldAcc;
+        }, {} as Record<string, SchemaField>),
+        isExpanded: false // Reset UI state
+      })),
+      eligibilityCriteria: builderSchema.eligibilityCriteria ? {
+        fields: builderSchema.eligibilityCriteria.fields.reduce((fieldAcc, field) => {
+          fieldAcc[field.name] = {
+            ...field
+          };
+          return fieldAcc;
+        }, {} as Record<string, EligibilityField>),
+        isExpanded: false // Reset UI state
+      } : undefined
+    };
+
   }, {});
 }
 
@@ -175,14 +233,13 @@ export async function saveOrganizationSchema(input: {
     if(!org){
       throw new Error("No org found");
     }
-    // Convert the section-based schema to the flat structure
-    const flatSchema = convertBuilderToFlatSchema(input.schema);
+    const cleanedSchema = cleanSchemaForDB(input.schema);
 
     // Update the organization
     await db
       .update(organizations)
       .set({
-        programSchema: flatSchema,
+        programSchema: cleanedSchema,
         updatedAt: new Date()
       })
       .where(eq(organizations.id, org.id));
@@ -195,7 +252,7 @@ export async function saveOrganizationSchema(input: {
   }
 }
 
-export async function getOrganizationSchema(clerkOrgId: string) {
+export async function getOrganizationSchema(clerkOrgId: string): Promise<GetSchemaResponse> {
   try {
     
     const clerkOrg = await clerkClient.organizations.getOrganization({
@@ -233,9 +290,9 @@ export async function getOrganizationSchema(clerkOrgId: string) {
     }
 
     return {
-      schema: convertFlatToBuilderSchema(org.programSchema as Record<string, SchemaField>),
-      orgId: org.id 
-    }
+      schema: org.programSchema as BuilderSchema,
+      orgId: org.id
+    };
   } catch (error) {
     console.error("Error fetching organization schema:", error);
     throw new Error("Failed to fetch organization schema");

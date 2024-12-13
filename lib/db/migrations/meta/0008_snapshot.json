@@ -1,6 +1,6 @@
 {
-  "id": "9ad8d3b9-2b3d-4ad3-a8d6-b78d90fde31d",
-  "prevId": "f8e84a8c-fc96-4a58-8966-188bfa85286a",
+  "id": "a2366824-5711-417b-bc74-46794af4b741",
+  "prevId": "9ad8d3b9-2b3d-4ad3-a8d6-b78d90fde31d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -735,6 +735,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "biography": {
+          "name": "biography",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "is_online": {
           "name": "is_online",
           "type": "boolean",
@@ -745,12 +751,6 @@
         "last_active_at": {
           "name": "last_active_at",
           "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "biography": {
-          "name": "biography",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1651,6 +1651,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "eligibility_data": {
+          "name": "eligibility_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "is_active": {
           "name": "is_active",

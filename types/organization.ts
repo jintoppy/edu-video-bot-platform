@@ -28,7 +28,7 @@ export interface SchemaField {
 export interface OrganizationSchema {
   id: string;
   name: string;
-  programSchema: Record<string, SchemaField>;
+  programSchema: BuilderSchema;
 }
 
 export type DefaultValueType<T extends SchemaField> = T extends { type: "text" }
@@ -54,16 +54,40 @@ export type InferObjectShape<T extends Record<string, SchemaField>> = {
   [K in keyof T]: DefaultValueType<T[K]>;
 };
 
-export interface SchemaSection {
+export interface DBSchemaSection {
   name: string;
-  isExpanded: boolean;
   fields: SchemaField[];
 }
+
+export interface SchemaSection extends DBSchemaSection {
+  isExpanded: boolean;
+}
+
+export interface EligibilityField {
+  name: string;
+  label: string;
+  type: FieldType;
+  required: boolean;
+  validation?: {
+    min?: number;
+    max?: number;
+    allowedValues?: string[];
+  };
+  operator?: 'equals' | 'greaterThan' | 'lessThan' | 'greaterThanOrEqual' | 'lessThanOrEqual' | 'in';
+}
+
+
 
 // Schema builder state interface
 export interface BuilderSchema {
   sections: SchemaSection[];
+  eligibilityCriteria?: {
+    isExpanded: boolean;
+    fields: EligibilityField[];
+  };
 }
+
+
 
 // Schema builder props interface
 export interface SchemaBuilderProps {

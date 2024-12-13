@@ -16,13 +16,23 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { saveOrganizationSchema } from "@/app/actions/organizations";
-import { BuilderSchema, FieldType, SchemaBuilderProps } from "@/types/organization";
+import {
+  BuilderSchema,
+  EligibilityField,
+  FieldType,
+  SchemaBuilderProps,
+} from "@/types/organization";
 
-
-const SchemaBuilder = ({ organizationId, initialSchema }: SchemaBuilderProps) => {
+const SchemaBuilder = ({
+  organizationId,
+  initialSchema,
+}: SchemaBuilderProps) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [schema, setSchema] = useState<BuilderSchema>(initialSchema);
+  const [schema, setSchema] = useState<BuilderSchema>({
+    sections: initialSchema.sections,
+    eligibilityCriteria: initialSchema.eligibilityCriteria,
+  });
 
   const addSection = () => {
     setSchema((prev) => ({
@@ -41,6 +51,81 @@ const SchemaBuilder = ({ organizationId, initialSchema }: SchemaBuilderProps) =>
   useEffect(() => {
     setSchema(initialSchema);
   }, [initialSchema]);
+
+  const addEligibilityField = () => {
+    if (!schema.eligibilityCriteria) return;
+
+    setSchema((prev) => ({
+      ...prev,
+      eligibilityCriteria: {
+        isExpanded: prev.eligibilityCriteria?.isExpanded || false,
+        fields: [
+          ...(prev.eligibilityCriteria?.fields ?? []),
+          {
+            name: "newEligibilityField",
+            label: "New Eligibility Field",
+            type: "number",
+            required: true,
+            operator: "greaterThanOrEqual",
+          },
+        ],
+      },
+    }));
+  };
+
+  const updateEligibilityField = (
+    fieldIndex: number,
+    updates: Partial<EligibilityField>
+  ) => {
+    if (!schema.eligibilityCriteria) return;
+
+    setSchema((prev) => ({
+      ...prev,
+      eligibilityCriteria: {
+        isExpanded: prev.eligibilityCriteria?.isExpanded || false,
+        fields: prev.eligibilityCriteria ? prev.eligibilityCriteria.fields.map((field, index) =>
+          index === fieldIndex ? { ...field, ...updates } : field
+        ) : [],
+      },
+    }));
+  };
+
+  const removeEligibilityField = (fieldIndex: number) => {
+    if (!schema.eligibilityCriteria) return;
+
+    setSchema((prev) => ({
+      ...prev,
+      eligibilityCriteria: {
+        isExpanded: prev.eligibilityCriteria?.isExpanded || false,
+        fields: prev.eligibilityCriteria ? prev.eligibilityCriteria.fields.filter(
+          (_, index) => index !== fieldIndex
+        ): [],
+      },
+    }));
+  };
+
+  const toggleEligibilitySection = () => {
+    if (!schema.eligibilityCriteria) return;
+
+    setSchema((prev) => ({
+      ...prev,
+      eligibilityCriteria: {
+        isExpanded: !prev.eligibilityCriteria?.isExpanded,
+        fields: prev.eligibilityCriteria?.fields ?? [],
+      },
+    }));
+  };
+
+  // Add eligibility section
+  const addEligibilityCriteria = () => {
+    setSchema((prev) => ({
+      ...prev,
+      eligibilityCriteria: {
+        isExpanded: true,
+        fields: [],
+      },
+    }));
+  };
 
   const addField = (sectionIndex: number) => {
     const newSections = [...schema.sections];
@@ -168,27 +253,31 @@ const SchemaBuilder = ({ organizationId, initialSchema }: SchemaBuilderProps) =>
     }));
   };
 
-  const updateFieldType = (sectionIndex: number, fieldIndex: number, newType: FieldType) => {
-    setSchema(prev => ({
+  const updateFieldType = (
+    sectionIndex: number,
+    fieldIndex: number,
+    newType: FieldType
+  ) => {
+    setSchema((prev) => ({
       ...prev,
-      sections: prev.sections.map((section, index) => 
-        index === sectionIndex 
+      sections: prev.sections.map((section, index) =>
+        index === sectionIndex
           ? {
               ...section,
-              fields: section.fields.map((field, fIndex) => 
-                fIndex === fieldIndex 
-                  ? { 
-                      ...field, 
+              fields: section.fields.map((field, fIndex) =>
+                fIndex === fieldIndex
+                  ? {
+                      ...field,
                       type: newType,
-                      options: newType === 'enum' ? [] : undefined,
-                      fields: newType === 'object' ? {} : undefined,
-                      arrayType: newType === 'array' ? undefined : undefined
+                      options: newType === "enum" ? [] : undefined,
+                      fields: newType === "object" ? {} : undefined,
+                      arrayType: newType === "array" ? undefined : undefined,
                     }
                   : field
-              )
+              ),
             }
           : section
-      )
+      ),
     }));
   };
 
@@ -201,14 +290,21 @@ const SchemaBuilder = ({ organizationId, initialSchema }: SchemaBuilderProps) =>
 
       // Validate schema before saving
       const hasEmptyFields = schema.sections.some(
-        (section: any) =>
+        (section) =>
           !section.name ||
           section.fields.some(
-            (field: any) => !field.name || !field.label || !field.type
+            (field) => !field.name || !field.label || !field.type
           )
       );
 
-      if (hasEmptyFields) {
+      const hasEmptyEligibilityFields = schema.eligibilityCriteria?.fields.some(
+        (field) => !field.name || !field.label || !field.type
+      );
+
+      if (
+        hasEmptyFields ||
+        (schema.eligibilityCriteria && hasEmptyEligibilityFields)
+      ) {
         toast({
           title: "Validation Error",
           description: "Please fill in all field names, labels, and types.",
@@ -311,7 +407,11 @@ const SchemaBuilder = ({ organizationId, initialSchema }: SchemaBuilderProps) =>
                     <Select
                       value={field.type}
                       onValueChange={(value) =>
-                        updateFieldType(sectionIndex, fieldIndex, value as FieldType)
+                        updateFieldType(
+                          sectionIndex,
+                          fieldIndex,
+                          value as FieldType
+                        )
                       }
                     >
                       <SelectTrigger>
@@ -368,6 +468,127 @@ const SchemaBuilder = ({ organizationId, initialSchema }: SchemaBuilderProps) =>
           <Plus className="h-4 w-4 mr-2" />
           Add Section
         </Button>
+
+        {/* Optional Add Eligibility button if not present */}
+        {!schema.eligibilityCriteria && (
+          <Button variant="outline" onClick={addEligibilityCriteria}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Eligibility Criteria
+          </Button>
+        )}
+
+        {/* Eligibility Criteria Section */}
+        {schema.eligibilityCriteria && (
+          <div className="border rounded-lg p-4 mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleEligibilitySection}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  {schema.eligibilityCriteria?.isExpanded ? (
+                    <ChevronDown />
+                  ) : (
+                    <ChevronRight />
+                  )}
+                </button>
+                <h3 className="font-semibold">Eligibility Criteria</h3>
+              </div>
+            </div>
+
+            {schema.eligibilityCriteria?.isExpanded && (
+              <div className="space-y-4 ml-6">
+                {schema.eligibilityCriteria.fields.map((field, fieldIndex) => (
+                  <div
+                    key={fieldIndex}
+                    className="grid grid-cols-5 gap-4 items-center"
+                  >
+                    <Input
+                      value={field.label}
+                      onChange={(e) =>
+                        updateEligibilityField(fieldIndex, {
+                          label: e.target.value,
+                        })
+                      }
+                      placeholder="Field Label"
+                    />
+                    <Input
+                      value={field.name}
+                      onChange={(e) =>
+                        updateEligibilityField(fieldIndex, {
+                          name: sanitizeFieldName(e.target.value),
+                        })
+                      }
+                      placeholder="Field Name"
+                    />
+                    <Select
+                      value={field.type}
+                      onValueChange={(value) =>
+                        updateEligibilityField(fieldIndex, {
+                          type: value as FieldType,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Field Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="number">Number</SelectItem>
+                        <SelectItem value="enum">Enum</SelectItem>
+                        <SelectItem value="boolean">Boolean</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={field.operator}
+                      onValueChange={(value) =>
+                        updateEligibilityField(fieldIndex, {
+                          operator: value as EligibilityField["operator"],
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Operator" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="equals">Equals</SelectItem>
+                        <SelectItem value="greaterThan">
+                          Greater Than
+                        </SelectItem>
+                        <SelectItem value="lessThan">Less Than</SelectItem>
+                        <SelectItem value="greaterThanOrEqual">
+                          Greater Than or Equal
+                        </SelectItem>
+                        <SelectItem value="lessThanOrEqual">
+                          Less Than or Equal
+                        </SelectItem>
+                        <SelectItem value="in">In</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeEligibilityField(fieldIndex)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addEligibilityField}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Eligibility Field
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">
           <h3 className="font-semibold mb-2">Preview</h3>

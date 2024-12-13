@@ -1,3 +1,4 @@
+import { BuilderSchema } from "@/types/organization";
 import { InferSelectModel, sql } from "drizzle-orm";
 import {
   pgTable,
@@ -100,7 +101,7 @@ export const organizations = pgTable("organizations", {
   planType: text("plan_type").notNull().default("free"),
   subscriptionStatus: text("subscription_status").notNull().default("active"),
   
-  programSchema: jsonb("program_schema"), 
+  programSchema: jsonb("program_schema").$type<BuilderSchema>(), 
 
   // Metadata
   metadata: jsonb("metadata"),
@@ -223,6 +224,7 @@ export const programs = pgTable("programs", {
   name: text("name").notNull(),
   organizationId: uuid("organization_id").references(() => organizations.id),
   data: jsonb("data").notNull(), // Stores the program data in org-specific structure
+  eligibility: jsonb("eligibility_data"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

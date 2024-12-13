@@ -45,14 +45,11 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
     [key: string]: any;
   }>({
     defaultValues: {
-      name: '',
-    }
+      name: "",
+    },
   });
 
-  const renderField = (
-    field: SchemaField,
-    path: string,
-  ): React.ReactNode => {
+  const renderField = (field: SchemaField, path: string): React.ReactNode => {
     const fieldValue = form.watch(path as any);
 
     switch (field.type) {
@@ -90,7 +87,9 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
             onValueChange={(value: string) => form.setValue(path, value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+              <SelectValue
+                placeholder={`Select ${field.label.toLowerCase()}`}
+              />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option) => (
@@ -129,7 +128,10 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
               variant="outline"
               size="sm"
               onClick={() => {
-                const newValue = [...arrayValue, getDefaultValue(field.arrayType!)];
+                const newValue = [
+                  ...arrayValue,
+                  getDefaultValue(field.arrayType!),
+                ];
                 form.setValue(path, newValue);
               }}
             >
@@ -146,7 +148,9 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
               <div key={fieldName} className="space-y-2">
                 <Label className="flex justify-between">
                   {fieldSchema.label}
-                  {fieldSchema.required && <span className="text-red-500">*</span>}
+                  {fieldSchema.required && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </Label>
                 {renderField(fieldSchema, `${path}.${fieldName}`)}
               </div>
@@ -176,7 +180,7 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
         return Object.entries(field.fields).reduce(
           (acc, [key, fieldSchema]) => ({
             ...acc,
-            [key]: getDefaultValue(fieldSchema)
+            [key]: getDefaultValue(fieldSchema),
           }),
           {}
         );
@@ -187,12 +191,13 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
 
   const onFormSubmit = async (formData: Record<string, any>) => {
     // Extract name from form data
-    const { name, ...sectionData } = formData;
-    
+    const { name, eligibility, ...sectionData } = formData;
+
     // Create properly structured program data
     const programData = {
       name,
-      data: sectionData
+      data: sectionData,
+      eligibility: eligibility || {}
     };
 
     await onSubmit(programData);
@@ -203,20 +208,32 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
   useEffect(() => {
     if (schema && open) {
       const defaultValues = {
-        name: '',
+        name: "",
         ...schema.sections.reduce((acc, section) => {
-          const sectionDefaults = section.fields.reduce((fieldAcc, field) => ({
-            ...fieldAcc,
-            [field.name]: getDefaultValue(field)
-          }), {});
-          
+          const sectionDefaults = section.fields.reduce(
+            (fieldAcc, field) => ({
+              ...fieldAcc,
+              [field.name]: getDefaultValue(field),
+            }),
+            {}
+          );
+
           return {
             ...acc,
-            [section.name.toLowerCase().replace(/\s+/g, '_')]: sectionDefaults
+            [section.name.toLowerCase().replace(/\s+/g, "_")]: sectionDefaults,
           };
-        }, {})
+        }, {}),
+        ...(schema.eligibilityCriteria && {
+          eligibility: schema.eligibilityCriteria.fields.reduce(
+            (acc, field) => ({
+              ...acc,
+              [field.name]: getDefaultValue(field),
+            }),
+            {}
+          ),
+        }),
       };
-      
+
       form.reset(defaultValues);
     }
   }, [schema, open]); // Remove form from dependencies
@@ -236,9 +253,11 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label>Program Name<span className="text-red-500">*</span></Label>
+            <Label>
+              Program Name<span className="text-red-500">*</span>
+            </Label>
             <Input
-              {...form.register('name' as const)}
+              {...form.register("name" as const)}
               placeholder="Enter program name"
               required
             />
@@ -251,17 +270,83 @@ export function AddProgramModal({ schema, onSubmit }: AddProgramModalProps) {
                   <div key={field.name} className="space-y-2">
                     <Label className="flex justify-between">
                       {field.label}
-                      {field.required && <span className="text-red-500">*</span>}
+                      {field.required && (
+                        <span className="text-red-500">*</span>
+                      )}
                     </Label>
-                    {renderField(field, `${section.name.toLowerCase().replace(/\s+/g, '_')}.${field.name}`)}
+                    {renderField(
+                      field,
+                      `${section.name.toLowerCase().replace(/\s+/g, "_")}.${
+                        field.name
+                      }`
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           ))}
 
+          {schema.eligibilityCriteria && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Eligibility Criteria</h3>
+              <div className="space-y-4">
+                {schema.eligibilityCriteria.fields.map((field) => (
+                  <div key={field.name} className="space-y-2">
+                    <Label className="flex justify-between">
+                      {field.label}
+                      {field.required && (
+                        <span className="text-red-500">*</span>
+                      )}
+                    </Label>
+                    <div className="flex gap-4">
+                      <div className="w-1/3">
+                        <Select
+                          value={
+                            form.watch(`eligibility.${field.name}.operator`) ||
+                            field.operator
+                          }
+                          onValueChange={(value) =>
+                            form.setValue(
+                              `eligibility.${field.name}.operator`,
+                              value
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select operator" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="equals">Equals</SelectItem>
+                            <SelectItem value="greaterThan">
+                              Greater Than
+                            </SelectItem>
+                            <SelectItem value="lessThan">Less Than</SelectItem>
+                            <SelectItem value="greaterThanOrEqual">
+                              Greater Than or Equal
+                            </SelectItem>
+                            <SelectItem value="lessThanOrEqual">
+                              Less Than or Equal
+                            </SelectItem>
+                            <SelectItem value="in">In</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex-1">
+                        {renderField(field, `eligibility.${field.name}.value`)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit">Save Program</Button>

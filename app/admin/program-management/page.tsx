@@ -141,7 +141,7 @@ const ProgramsManagement: React.FC = () => {
         const error = await response.json().catch(() => null);
         throw new Error(error?.message || "Failed to add program");
       }
-     
+
       fetchPrograms(orgId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add program");
@@ -149,7 +149,7 @@ const ProgramsManagement: React.FC = () => {
   };
 
   const handleEditProgram = async (programId: string, programData: any) => {
-    if(!orgId) return;
+    if (!orgId) return;
     try {
       const response = await fetch("/api/programs", {
         method: "PUT",
@@ -248,17 +248,15 @@ const ProgramsManagement: React.FC = () => {
     switch (fieldSchema.type) {
       case "boolean":
         return value ? "Yes" : "No";
+      case "number":
+        return typeof value === "number" ? value.toString() : "N/A";
       case "array":
         if (!Array.isArray(value)) return String(value);
-        if (fieldSchema.arrayType?.type === "object") {
-          return `${value.length} items`;
-        }
         return value.join(", ");
-      case "object":
-        if (!fieldSchema.fields) return JSON.stringify(value);
-        return Object.keys(fieldSchema.fields).length + " properties";
       case "enum":
         return fieldSchema.options?.includes(value) ? value : "Invalid option";
+      case "object":
+        return typeof value === "object" ? JSON.stringify(value) : "N/A";
       default:
         return String(value);
     }
@@ -299,21 +297,45 @@ const ProgramsManagement: React.FC = () => {
   };
 
   const renderProgramData = (program: Program) => {
-    return organizationSchema.sections.map((section) => (
-      <div key={section.name} className="mb-4">
-        <h3 className="font-medium mb-2">{section.name}</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {section.fields.map((field) => (
-            <div key={field.name} className="space-y-1">
-              <div className="text-sm text-gray-500">{field.label}</div>
-              <div className="text-sm">
-                {renderFieldValue(program.data[field.name], field)}
-              </div>
+    return (
+      <>
+        {organizationSchema.sections.map((section) => (
+          <div key={section.name} className="mb-4">
+            <h3 className="font-medium mb-2">{section.name}</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {section.fields.map((field) => (
+                <div key={field.name} className="space-y-1">
+                  <div className="text-sm text-gray-500">{field.label}</div>
+                  <div className="text-sm">
+                    {renderFieldValue(program.data[field.name], field)}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
-    ));
+          </div>
+        ))}
+        {/* Eligibility Criteria section */}
+        {organizationSchema.eligibilityCriteria && (
+          <div className="mb-4">
+            <h3 className="font-medium mb-2">Eligibility Criteria</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {organizationSchema.eligibilityCriteria.fields.map((field) => (
+                <div key={field.name} className="space-y-1">
+                  <div className="text-sm text-gray-500">{field.label}</div>
+                  <div className="text-sm flex items-center gap-2">
+                    <span className="text-gray-600">{field.operator}</span>
+                    {renderFieldValue(
+                      program.data.eligibility?.[field.name],
+                      field
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
   };
 
   const handleDeleteProgram = async (programId: string) => {
@@ -344,6 +366,7 @@ const ProgramsManagement: React.FC = () => {
       // Handle error (show toast, etc.)
     }
   };
+
 
   return (
     <DashboardShell>
@@ -382,9 +405,7 @@ const ProgramsManagement: React.FC = () => {
                 <div key={program.id} className="border-b last:border-b-0">
                   <div className="p-4 bg-gray-50 flex justify-between items-center">
                     <div className="flex items-center space-x-4">
-                      <span className="font-medium">
-                        {program.name}
-                      </span>
+                      <span className="font-medium">{program.name}</span>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
                           program.isActive
@@ -465,6 +486,34 @@ const ProgramsManagement: React.FC = () => {
                         </div>
                       );
                     })}
+                    {/* Eligibility Criteria section */}
+                    {organizationSchema.eligibilityCriteria && (
+                      <div className="mb-4">
+                        <h3 className="font-medium mb-2">
+                          Eligibility Criteria
+                        </h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {organizationSchema.eligibilityCriteria.fields.map(
+                            (field) => (
+                              <div key={field.name} className="space-y-1">
+                                <div className="text-sm text-gray-500">
+                                  {field.label}
+                                </div>
+                                <div className="text-sm flex items-center gap-2">
+                                  <span className="text-gray-500 italic">
+                                    {field.operator}
+                                  </span>
+                                  {renderFieldValue(
+                                    program.eligibility?.[field.name]?.value,
+                                    field
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
