@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/db/schema";
+import { BuilderSchema } from "@/types/organization";
 import { eq } from "drizzle-orm";
 
 export async function getOrganizationBySubdomain(subdomain: string) {
@@ -24,7 +25,7 @@ export async function getOrganizationBySubdomain(subdomain: string) {
 
 export async function saveOrganizationSchema(
   organizationId: string,
-  schema: Record<string, any>
+  schema: BuilderSchema
 ) {
   // Validate schema structure
   validateSchema(schema);
