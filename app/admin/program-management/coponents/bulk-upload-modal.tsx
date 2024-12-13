@@ -343,7 +343,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     headers.forEach(header => {
       headerRow[header] = header;
     });
-    templateRows.push(headerRow);
+    // templateRows.push(headerRow);
 
     // Second row: Instructions
     const instructionsRow: Record<string, string> = {};
@@ -404,6 +404,9 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       }
     });
     templateRows.push(exampleRow);
+
+
+    console.log(templateRows)
 
     // Create workbook
     const wb = XLSX.utils.book_new();
@@ -488,7 +491,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={schema.sections.length === 0}>
           <Upload className="mr-2 h-4 w-4" />
           Bulk Upload
         </Button>
