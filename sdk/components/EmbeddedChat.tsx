@@ -1,6 +1,6 @@
 // src/sdk/components/EmbeddedChat.tsx
 import React, { useState, useEffect, useRef } from "react";
-import { X, Minimize2, Maximize2, MessageSquare } from "lucide-react";
+import { X, Minimize2, Maximize2, MessageSquare, VideoOff, Video } from "lucide-react";
 import { ChatInterface } from "./ChatInterface";
 import { VideoPlayer } from "./VideoPlayer";
 import type { OrganizationTheme } from "../lib/types";
@@ -17,6 +17,7 @@ const ProgramList = dynamic(() => import("./ui/program-list"));
 const ContactForm = dynamic(() => import("./ui/contact-form"));
 const ProfileForm = dynamic(() => import("./ui/profile-form"));
 
+console.log('hello')
 const simliClient = new SimliClient();
 
 interface EmbeddedChatProps {
@@ -64,8 +65,10 @@ export function EmbeddedChat({
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAvatarVisible, setIsAvatarVisible] = useState(false);
   const [error, setError] = useState("");
+  const [isVideoOn, setIsVideoOn] = useState(false);
+  const [isMicrophoneOn, setIsMicrophoneOn] = useState(false);
 
-  console.log('error', error);
+  console.log("error", error);
 
   console.log("sessionId", sessionId);
   console.log("orgId", orgId);
@@ -110,7 +113,12 @@ export function EmbeddedChat({
 
   // Initialize Simli client
   useEffect(() => {
-    if (settings?.features?.videoBot && videoRef.current && audioRef.current && !isSimliInitialized.current) {
+    if (
+      settings?.features?.videoBot &&
+      videoRef.current &&
+      audioRef.current &&
+      !isSimliInitialized.current
+    ) {
       console.log("Initializing Simli client");
       simliClient.Initialize({
         apiKey: process.env.NEXT_PUBLIC_SIMLI_API_KEY || "",
@@ -132,17 +140,23 @@ export function EmbeddedChat({
         const audioData = new Uint8Array(6000).fill(0);
         simliClient.sendAudioData(audioData);
       });
-
-      simliClient.start();
+      
       isSimliInitialized.current = true;
     }
 
-    return () => {
-      if (simliClient) {
-        simliClient.close();
-      }
-    };
+    // return () => {
+      // if (simliClient) {
+      //   simliClient.close();
+      // }
+    // };
   }, [settings?.features?.videoBot, videoRef.current, audioRef.current]);
+
+  const startVideo = () => {
+    if(simliClient){
+      setIsVideoOn(true);
+      simliClient.start();
+    }
+  }
 
   useEffect(() => {
     if (!sessionId) return;
@@ -165,8 +179,8 @@ export function EmbeddedChat({
     channel.bind(
       "audio-chunk",
       (data: { chunk: number[]; chunkIndex: number }) => {
-        console.log('got audio chunk');
         if (simliClient && isAvatarVisible) {
+          console.log('avatar visible');
           // Convert array back to Uint8Array and send to Simli
           const audioData = new Uint8Array(data.chunk);
           simliClient.sendAudioData(audioData);
@@ -271,7 +285,7 @@ export function EmbeddedChat({
       } as React.CSSProperties)
     : {};
 
-  console.log('settings', settings)
+  console.log("settings", settings);
 
   return (
     <div className="h-full w-full" style={themeStyles}>
@@ -290,18 +304,8 @@ export function EmbeddedChat({
             </div>
 
             <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-full">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M23 7l-7 5 7 5V7z"></path>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
+              <button className="p-2 rounded-full" onClick={startVideo}>
+                {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
               </button>
               <button className="p-2 rounded-full">
                 <svg
@@ -349,9 +353,12 @@ export function EmbeddedChat({
           <div className="flex flex-1">
             {/* Left Panel - Video/UI Content */}
             <div className="w-1/2 border-r flex flex-1 flex-col">
-                <div className="aspect-video bg-gray-100 relative">
-                  <VideoBox videoRef={videoRef} audioRef={audioRef} />
+              <div className="aspect-video bg-gray-100 relative">
+                <div className="aspect-video flex rounded-sm overflow-hidden items-center h-[350px] w-[350px] justify-center bg-gray-100">
+                  <video ref={videoRef} autoPlay playsInline height="350" width="350" />
+                  <audio ref={audioRef} autoPlay />
                 </div>
+              </div>
               {/* Generated UI Content */}
               <div className="flex-1 overflow-auto p-4">
                 <AnimatePresence>

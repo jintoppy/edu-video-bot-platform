@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { EmbeddedChat } from "@/sdk/components/EmbeddedChat";
 import { useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
@@ -127,7 +127,6 @@ function EmbeddedChatPageComp() {
         programId={programId || undefined}
         mode={mode as "widget" | "inline"}
         settings={mergedConfig?.settings}
-        metadata={mergedConfig?.metadata}
         theme={mergedConfig?.settings?.theme}
         onClose={() => {}}
       />
