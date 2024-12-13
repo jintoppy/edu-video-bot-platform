@@ -42,6 +42,10 @@ interface EmbeddedChatProps {
   onClose?: () => void;
 }
 
+const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+});
+
 export function EmbeddedChat({
   apiKey,
   orgId,
@@ -161,9 +165,7 @@ export function EmbeddedChat({
   useEffect(() => {
     if (!sessionId) return;
 
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
+    
 
     const channel = pusher.subscribe(`chat-${sessionId}`);
 
@@ -179,7 +181,7 @@ export function EmbeddedChat({
     channel.bind(
       "audio-chunk",
       (data: { chunk: number[]; chunkIndex: number }) => {
-        if (simliClient && isAvatarVisible) {
+        if (simliClient && isAvatarVisible && isVideoOn) {
           console.log('avatar visible');
           // Convert array back to Uint8Array and send to Simli
           const audioData = new Uint8Array(data.chunk);
