@@ -121,18 +121,11 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         schema.eligibilityCriteria.fields.forEach((field) => {
           const eligibilityData = record.eligibility?.[field.name];
           
-          if (field.required && (!eligibilityData || !eligibilityData.value)) {
+          if (field.required && !eligibilityData.value) {
             rowErrors.push(`Missing required eligibility criteria "${field.label}"`);
           }
 
-          if (eligibilityData) {
-            // Validate operator
-            const validOperators = ["equals", "greaterThan", "lessThan", "greaterThanOrEqual", "lessThanOrEqual", "in"];
-            if (eligibilityData.operator && !validOperators.includes(eligibilityData.operator)) {
-              rowErrors.push(
-                `Invalid operator "${eligibilityData.operator}" for eligibility field "${field.label}"`
-              );
-            }
+          if (eligibilityData && eligibilityData.value) {
 
             // Validate value based on type
             if (eligibilityData.value !== undefined && eligibilityData.value !== "") {
@@ -143,14 +136,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
                       `Invalid number value "${eligibilityData.value}" for eligibility field "${field.label}"`
                     );
                   }
-                  break;
-                case "enum":
-                  if (field.options && !field.options.includes(eligibilityData.value)) {
-                    rowErrors.push(
-                      `Invalid value "${eligibilityData.value}" for eligibility field "${field.label}". Allowed values: ${field.options.join(", ")}`
-                    );
-                  }
-                  break;
+                  break;                
               }
             }
           }
@@ -164,6 +150,8 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         });
       }
     });
+
+    console.log(validationErrors)
 
     return validationErrors;
   };
@@ -458,6 +446,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
   };
 
   const restructureData = (flatData: Record<string, any>[]) => {
+    
     return flatData.map((row) => {
       const structured: Record<string, any> = {
         name: row.name,
@@ -471,11 +460,18 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         const parts = key.split(".");
         if (parts[0] === "eligibility") {
           // Eligibility field
+          
           const [, field, type] = parts;
+          const eligibilitySchemaField = schema.eligibilityCriteria?.fields.find(
+            (f) => f.name === field
+          );
           if (!structured.eligibility[field]) {
             structured.eligibility[field] = {};
           }
-          structured.eligibility[field][type] = value;
+          structured.eligibility[field].value = value;
+          if(eligibilitySchemaField?.operator){
+            structured.eligibility[field].operator = eligibilitySchemaField?.operator;
+          }
         } else {
           // Regular section field
           const [section, field] = parts;
