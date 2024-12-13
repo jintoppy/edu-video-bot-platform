@@ -42,7 +42,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     setError(null);
     setFile(null);
     setPreviewData([]);
-  }
+  };
 
   const validateData = (data: any[]): ValidationError[] => {
     const validationErrors: ValidationError[] = [];
@@ -74,7 +74,11 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           if (field.type === "enum" && value && field.options) {
             if (!field.options.includes(value)) {
               rowErrors.push(
-                `Invalid value "${value}" for field "${field.label}" in section "${section.name}". Allowed values: ${field.options.join(", ")}`
+                `Invalid value "${value}" for field "${
+                  field.label
+                }" in section "${
+                  section.name
+                }". Allowed values: ${field.options.join(", ")}`
               );
             }
           }
@@ -108,6 +112,59 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         });
       });
 
+      if (schema.eligibilityCriteria) {
+        schema.eligibilityCriteria.fields.forEach((field) => {
+          const fieldData = record.eligibility?.[field.name];
+
+          // Validate value
+          if (field.required && !fieldData?.value && fieldData?.value !== 0) {
+            rowErrors.push(
+              `Missing required eligibility value for "${field.label}"`
+            );
+          }
+
+          // Validate operator
+          if (fieldData?.operator) {
+            const validOperators = [
+              "equals",
+              "greaterThan",
+              "lessThan",
+              "greaterThanOrEqual",
+              "lessThanOrEqual",
+              "in",
+            ];
+            if (!validOperators.includes(fieldData.operator)) {
+              rowErrors.push(
+                `Invalid operator "${fieldData.operator}" for eligibility field "${field.label}"`
+              );
+            }
+          }
+
+          // Type-specific validation for values
+          if (fieldData?.value !== undefined) {
+            switch (field.type) {
+              case "number":
+                if (isNaN(Number(fieldData.value))) {
+                  rowErrors.push(
+                    `Invalid number value for eligibility field "${field.label}"`
+                  );
+                }
+                break;
+              case "enum":
+                if (
+                  field.validation?.allowedValues &&
+                  !field.validation.allowedValues.includes(fieldData.value)
+                ) {
+                  rowErrors.push(
+                    `Invalid enum value for eligibility field "${field.label}"`
+                  );
+                }
+                break;
+            }
+          }
+        });
+      }
+
       if (rowErrors.length > 0) {
         validationErrors.push({
           row: index + 1,
@@ -127,6 +184,12 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         headers.push(`${sectionKey}.${field.name}`);
       });
     });
+    if (schema.eligibilityCriteria) {
+      schema.eligibilityCriteria.fields.forEach((field) => {
+        headers.push(`eligibility.${field.name}.value`);
+        headers.push(`eligibility.${field.name}.operator`);
+      });
+    }
     return headers;
   };
 
@@ -191,8 +254,8 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           const sheet = workbook.Sheets[sheetName];
           // Skip the description row (second row) by starting from index 2
           // Get the range of the sheet
-          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
-          
+          const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+
           // Start from row 4 (index 3) onwards to skip headers, instructions, and header labels
           const startRow = 3; // Index 3 is the 4th row where actual data starts
           const lastRow = range.e.r;
@@ -200,17 +263,20 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           // Get headers from row 1 (index 0) which contains our column headers
           const headers = XLSX.utils.sheet_to_json(sheet, {
             range: 0, // First row contains our headers
-            header: 1
+            header: 1,
           })[0] as string[];
 
           // Only process if we have data rows after the template rows
           if (lastRow >= startRow) {
-            const jsonData = XLSX.utils.sheet_to_json(sheet, { 
-              range: { s: { r: startRow, c: 0 }, e: { r: lastRow, c: range.e.c } },
+            const jsonData = XLSX.utils.sheet_to_json(sheet, {
+              range: {
+                s: { r: startRow, c: 0 },
+                e: { r: lastRow, c: range.e.c },
+              },
               defval: "", // Default empty value for missing cells
-              header: headers // Use headers from the template file
+              header: headers, // Use headers from the template file
             });
-            
+
             // Map the data to match our expected structure
             const mappedData = jsonData.map((row: any) => {
               const mappedRow: Record<string, any> = {};
@@ -252,10 +318,12 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     }
   };
 
+  console.log(schema);
+
   const downloadTemplate = () => {
     // Create template rows
     const templateRows = [];
-    
+
     // Add column headers first (actual field names)
     const headers: Record<string, string> = {
       name: "name", // Add name field first
@@ -267,14 +335,20 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         headers[header] = header;
       });
     });
+    if (schema.eligibilityCriteria) {
+      schema.eligibilityCriteria.fields.forEach((field) => {
+        headers[`eligibility.${field.name}`] = `eligibility.${field.name}`;
+      });
+    }
+
     templateRows.push(headers);
 
     // Add instructions row
     const instructionsRow: Record<string, string> = {
-      name: "Instructions: Fill in the program details below. Required fields are marked with (Required)"
+      name: "Instructions: Fill in the program details below. Required fields are marked with (Required)",
     };
-    Object.keys(headers).forEach(key => {
-      if (key !== 'name') {
+    Object.keys(headers).forEach((key) => {
+      if (key !== "name") {
         instructionsRow[key] = "";
       }
     });
@@ -293,14 +367,15 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
         headerLabels[header] = label;
       });
     });
+    // Eligibility labels
+    if (schema.eligibilityCriteria) {
+      schema.eligibilityCriteria.fields.forEach((field) => {
+        headerLabels[`eligibility.${field.name}`] = `${field.label} Value${
+          field.required ? " (Required)" : ""
+        } (${field.operator})`;
+      });
+    }
     templateRows.push(headerLabels);
-
-    // Add empty row as template
-    // const emptyRow = Object.keys(headers).reduce((acc, header) => {
-    //   acc[header] = '';
-    //   return acc;
-    // }, {} as Record<string, string>);
-    // templateRows.push(emptyRow);
 
     // Add example row with more meaningful examples
     const exampleRow = Object.keys(headers).reduce((acc, header) => {
@@ -324,7 +399,16 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       }
       return acc;
     }, {} as Record<string, string>);
+
+    if (schema.eligibilityCriteria) {
+      schema.eligibilityCriteria.fields.forEach((field) => {
+        exampleRow[`eligibility.${field.name}`] =
+          field.type === "number" ? "75" : "Example Value";
+      });
+    }
     templateRows.push(exampleRow);
+
+    console.log(templateRows);
 
     // Create workbook
     const wb = XLSX.utils.book_new();
@@ -354,6 +438,17 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           }));
         })
         .flat(),
+      ...(schema.eligibilityCriteria?.fields.map((field) => {
+        return {
+          "Column Header": `eligibility.${field.name}`,
+          "Field Name": `${field.label} Value`,
+          Required: field.required ? "Yes" : "No",
+          Type: field.type,
+          Description: `Value for eligibility criteria "${field.label}. 
+              Operator (${field.operator})
+            "`,
+        };
+      }) ?? []),
     ];
 
     const wsInstructions = XLSX.utils.json_to_sheet(instructionsData);
@@ -367,16 +462,28 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       const structured: Record<string, any> = {
         name: row.name,
         data: {},
+        eligibility: {},
       };
 
       Object.entries(row).forEach(([key, value]) => {
         if (key === "name") return;
 
-        const [section, field] = key.split(".");
-        if (!structured.data[section]) {
-          structured.data[section] = {};
+        const parts = key.split(".");
+        if (parts[0] === "eligibility") {
+          // Eligibility field
+          const [, field, type] = parts;
+          if (!structured.eligibility[field]) {
+            structured.eligibility[field] = {};
+          }
+          structured.eligibility[field][type] = value;
+        } else {
+          // Regular section field
+          const [section, field] = parts;
+          if (!structured.data[section]) {
+            structured.data[section] = {};
+          }
+          structured.data[section][field] = value;
         }
-        structured.data[section][field] = value;
       });
 
       return structured;
