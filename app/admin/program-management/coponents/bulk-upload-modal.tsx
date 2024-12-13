@@ -324,53 +324,44 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     // Create template rows
     const templateRows = [];
 
-    // Add column headers first (actual field names)
-    const headers: Record<string, string> = {
-      name: "name", // Add name field first
-    };
+    // Create headers array (we'll use this for structure but not push it)
+    const headers: string[] = ["name"];
     schema.sections.forEach((section) => {
       const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
       section.fields.forEach((field) => {
-        const header = `${sectionKey}.${field.name}`;
-        headers[header] = header;
+        headers.push(`${sectionKey}.${field.name}`);
       });
     });
     if (schema.eligibilityCriteria) {
       schema.eligibilityCriteria.fields.forEach((field) => {
-        headers[`eligibility.${field.name}`] = `eligibility.${field.name}`;
+        headers.push(`eligibility.${field.name}`);
       });
     }
 
-    templateRows.push(headers);
-
     // Add instructions row
-    const instructionsRow: Record<string, string> = {
-      name: "Instructions: Fill in the program details below. Required fields are marked with (Required)",
-    };
-    Object.keys(headers).forEach((key) => {
-      if (key !== "name") {
-        instructionsRow[key] = "";
-      }
+    const instructionsRow: Record<string, string> = {};
+    headers.forEach(header => {
+      instructionsRow[header] = header === "name" 
+        ? "Instructions: Fill in the program details below. Required fields are marked with (Required)"
+        : "";
     });
     templateRows.push(instructionsRow);
 
-    // Add header labels row
+    // Add header labels row (this will be our column headers)
     const headerLabels: Record<string, string> = {
-      name: "Program Name (Required)", // Add mandatory name field first
+      name: "Program Name (Required)",
     };
     schema.sections.forEach((section) => {
       const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
       section.fields.forEach((field) => {
         const header = `${sectionKey}.${field.name}`;
-        let label = field.label;
-        if (field.required) label += " (Required)";
-        headerLabels[header] = label;
+        headerLabels[header] = `${field.label}${field.required ? " (Required)" : ""}`;
       });
     });
-    // Eligibility labels
     if (schema.eligibilityCriteria) {
       schema.eligibilityCriteria.fields.forEach((field) => {
-        headerLabels[`eligibility.${field.name}`] = `${field.label} Value${
+        const header = `eligibility.${field.name}`;
+        headerLabels[header] = `${field.label} Value${
           field.required ? " (Required)" : ""
         } (${field.operator})`;
       });
