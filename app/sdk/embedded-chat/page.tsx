@@ -35,8 +35,8 @@ const DEFAULT_CONFIG = {
 
 function EmbeddedChatPageComp() {
   const searchParams = useSearchParams();
-  const [initialized, setInitialized] = React.useState(true);
-  const [config, setConfig] = React.useState(DEFAULT_CONFIG);
+  const [initialized, setInitialized] = React.useState(false);
+  const [config, setConfig] = React.useState<typeof DEFAULT_CONFIG | null>(null);
 
   React.useEffect(() => {
     let mounted = true;
@@ -75,26 +75,40 @@ function EmbeddedChatPageComp() {
   const primaryColor = searchParams.get("primaryColor");
   const fontFamily = searchParams.get("fontFamily");
 
+  const [mergedConfig, setMergedConfig] = React.useState<typeof DEFAULT_CONFIG | null>(null);
+
+  React.useEffect(() => {
+    if (!config) {
+      setConfig(DEFAULT_CONFIG);
+      return;
+    }
+
+    if (!apiKey) {
+      return;
+    }
+
+    // Merge URL parameters with received config
+    const newMergedConfig = {
+      ...config,
+      settings: {
+        ...(config?.settings || {}),
+        theme: {
+          ...(config?.settings?.theme || {}),
+          primaryColor: primaryColor || config?.settings?.theme?.primaryColor,
+          fontFamily: fontFamily || config?.settings?.theme?.fontFamily,
+        },
+      },
+    };
+
+    setMergedConfig(newMergedConfig);
+    setInitialized(true);
+  }, [config, apiKey, primaryColor, fontFamily]);
+
   if (!apiKey) {
     return <div>API Key is required</div>;
   }
 
-  // Merge URL parameters with received config
-  const mergedConfig = {
-    ...config,
-    settings: {
-      ...(config?.settings || {}),
-      theme: {
-        ...(config?.settings?.theme || {}),
-        primaryColor: primaryColor || config?.settings?.theme?.primaryColor,
-        fontFamily: fontFamily || config?.settings?.theme?.fontFamily,
-      },
-    },
-  };
-
-  console.log("mergedConfig", mergedConfig);
-
-  if (!initialized) {
+  if (!initialized || !mergedConfig) {
     return <div>Initializing chat...</div>;
   }
 
@@ -112,9 +126,9 @@ function EmbeddedChatPageComp() {
         sessionId={mergedConfig.sessionId || undefined}
         programId={programId || undefined}
         mode={mode as "widget" | "inline"}
-        settings={mergedConfig.settings}
-        metadata={mergedConfig.metadata}
-        theme={mergedConfig.settings?.theme}
+        settings={mergedConfig?.settings}
+        metadata={mergedConfig?.metadata}
+        theme={mergedConfig?.settings?.theme}
         onClose={() => {}}
       />
     </div>
