@@ -2,12 +2,19 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { documentation, documentEmbeddings } from "@/lib/db/schema";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { NeonPostgres } from '@langchain/community/vectorstores/neon';
 
 // Initialize OpenAI client
-const embeddings = new OpenAIEmbeddings({
+export const embeddings = new OpenAIEmbeddings({
   dimensions: 1536,
   model: 'text-embedding-3-small',
 });
+
+export async function loadVectorStore() {
+  return await NeonPostgres.initialize(embeddings, {
+    connectionString: process.env.DATABASE_URL as string,
+  });
+}
 
 // Function to generate embeddings for a text
 export async function generateEmbedding(text: string) {

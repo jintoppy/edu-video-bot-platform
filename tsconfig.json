@@ -3,6 +3,7 @@
     "lib": [
       "dom",
       "dom.iterable",
+      "DOM.AsyncIterable",
       "esnext"
     ],
     "allowJs": true,
