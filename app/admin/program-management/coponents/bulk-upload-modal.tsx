@@ -70,96 +70,88 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
             );
           }
 
-          // Validate enum values
-          if (field.type === "enum" && value && field.options) {
-            if (!field.options.includes(value)) {
-              rowErrors.push(
-                `Invalid value "${value}" for field "${
-                  field.label
-                }" in section "${
-                  section.name
-                }". Allowed values: ${field.options.join(", ")}`
-              );
-            }
-          }
-
-          // Validate number values
-          if (field.type === "number" && value) {
-            if (isNaN(Number(value))) {
-              rowErrors.push(
-                `Invalid number value "${value}" for field "${field.label}" in section "${section.name}"`
-              );
-            }
-          }
-
-          // Validate array values
-          if (field.type === "array" && value) {
-            if (!Array.isArray(value)) {
-              rowErrors.push(
-                `Invalid array value for field "${field.label}" in section "${section.name}"`
-              );
-            }
-          }
-
-          // Validate object values
-          if (field.type === "object" && value) {
-            if (typeof value !== "object" || Array.isArray(value)) {
-              rowErrors.push(
-                `Invalid object value for field "${field.label}" in section "${section.name}"`
-              );
+          // Type-specific validations
+          if (value !== undefined && value !== "") {
+            switch (field.type) {
+              case "enum":
+                if (field.options && !field.options.includes(value)) {
+                  rowErrors.push(
+                    `Invalid value "${value}" for field "${field.label}" in section "${section.name}". Allowed values: ${field.options.join(", ")}`
+                  );
+                }
+                break;
+              case "number":
+                if (isNaN(Number(value))) {
+                  rowErrors.push(
+                    `Invalid number value "${value}" for field "${field.label}" in section "${section.name}"`
+                  );
+                }
+                break;
+              case "array":
+                try {
+                  const arr = JSON.parse(value);
+                  if (!Array.isArray(arr)) {
+                    throw new Error();
+                  }
+                } catch {
+                  rowErrors.push(
+                    `Invalid array value for field "${field.label}" in section "${section.name}". Expected JSON array format.`
+                  );
+                }
+                break;
+              case "object":
+                try {
+                  const obj = JSON.parse(value);
+                  if (typeof obj !== "object" || Array.isArray(obj)) {
+                    throw new Error();
+                  }
+                } catch {
+                  rowErrors.push(
+                    `Invalid object value for field "${field.label}" in section "${section.name}". Expected JSON object format.`
+                  );
+                }
+                break;
             }
           }
         });
       });
 
+      // Validate eligibility criteria
       if (schema.eligibilityCriteria) {
         schema.eligibilityCriteria.fields.forEach((field) => {
-          const fieldData = record.eligibility?.[field.name];
-
-          // Validate value
-          if (field.required && !fieldData?.value && fieldData?.value !== 0) {
-            rowErrors.push(
-              `Missing required eligibility value for "${field.label}"`
-            );
+          const eligibilityData = record.eligibility?.[field.name];
+          
+          if (field.required && (!eligibilityData || !eligibilityData.value)) {
+            rowErrors.push(`Missing required eligibility criteria "${field.label}"`);
           }
 
-          // Validate operator
-          if (fieldData?.operator) {
-            const validOperators = [
-              "equals",
-              "greaterThan",
-              "lessThan",
-              "greaterThanOrEqual",
-              "lessThanOrEqual",
-              "in",
-            ];
-            if (!validOperators.includes(fieldData.operator)) {
+          if (eligibilityData) {
+            // Validate operator
+            const validOperators = ["equals", "greaterThan", "lessThan", "greaterThanOrEqual", "lessThanOrEqual", "in"];
+            if (eligibilityData.operator && !validOperators.includes(eligibilityData.operator)) {
               rowErrors.push(
-                `Invalid operator "${fieldData.operator}" for eligibility field "${field.label}"`
+                `Invalid operator "${eligibilityData.operator}" for eligibility field "${field.label}"`
               );
             }
-          }
 
-          // Type-specific validation for values
-          if (fieldData?.value !== undefined) {
-            switch (field.type) {
-              case "number":
-                if (isNaN(Number(fieldData.value))) {
-                  rowErrors.push(
-                    `Invalid number value for eligibility field "${field.label}"`
-                  );
-                }
-                break;
-              case "enum":
-                if (
-                  field.validation?.allowedValues &&
-                  !field.validation.allowedValues.includes(fieldData.value)
-                ) {
-                  rowErrors.push(
-                    `Invalid enum value for eligibility field "${field.label}"`
-                  );
-                }
-                break;
+            // Validate value based on type
+            if (eligibilityData.value !== undefined && eligibilityData.value !== "") {
+              switch (field.type) {
+                case "number":
+                  if (isNaN(Number(eligibilityData.value))) {
+                    rowErrors.push(
+                      `Invalid number value "${eligibilityData.value}" for eligibility field "${field.label}"`
+                    );
+                  }
+                  break;
+                case "enum":
+                  if (field.options && !field.options.includes(eligibilityData.value)) {
+                    rowErrors.push(
+                      `Invalid value "${eligibilityData.value}" for eligibility field "${field.label}". Allowed values: ${field.options.join(", ")}`
+                    );
+                  }
+                  break;
+              }
             }
           }
         });
@@ -252,37 +244,47 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
           const workbook = XLSX.read(data, { type: "binary" });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          // Skip the description row (second row) by starting from index 2
-          // Get the range of the sheet
           const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
 
           // Start from row 4 (index 3) onwards to skip headers, instructions, and header labels
-          const startRow = 3; // Index 3 is the 4th row where actual data starts
+          const startRow = 3;
           const lastRow = range.e.r;
 
-          // Get headers from row 1 (index 0) which contains our column headers
+          // Get headers from row 1 (index 0)
           const headers = XLSX.utils.sheet_to_json(sheet, {
-            range: 0, // First row contains our headers
+            range: 0,
             header: 1,
           })[0] as string[];
 
-          // Only process if we have data rows after the template rows
           if (lastRow >= startRow) {
             const jsonData = XLSX.utils.sheet_to_json(sheet, {
               range: {
                 s: { r: startRow, c: 0 },
                 e: { r: lastRow, c: range.e.c },
               },
-              defval: "", // Default empty value for missing cells
-              header: headers, // Use headers from the template file
+              defval: "",
+              header: headers,
             });
 
-            // Map the data to match our expected structure
+            // Map and clean the data
             const mappedData = jsonData.map((row: any) => {
               const mappedRow: Record<string, any> = {};
               Object.entries(row).forEach(([key, value]) => {
                 // Skip empty cells
                 if (value === "") return;
+                
+                // Handle special cases for arrays and objects
+                if (typeof value === "string") {
+                  if (value.startsWith("[") || value.startsWith("{")) {
+                    try {
+                      mappedRow[key.trim()] = JSON.parse(value);
+                      return;
+                    } catch (e) {
+                      // If parsing fails, use the original string value
+                    }
+                  }
+                }
+                
                 mappedRow[key.trim()] = value;
               });
               return mappedRow;
@@ -291,7 +293,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
             console.log("Mapped data:", mappedData);
             resolve(mappedData);
           } else {
-            resolve([]); // Return empty array if no data rows found
+            resolve([]);
           }
         } catch (error) {
           reject(error);
