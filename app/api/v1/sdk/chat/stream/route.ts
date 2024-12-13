@@ -1,120 +1,112 @@
-import { openai } from '@ai-sdk/openai';
-import { groq } from '@ai-sdk/groq';
-import { JSONValue, StreamData, streamText, tool, ToolExecutionOptions } from 'ai';
-import { z } from 'zod';
-import { programs, users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { db } from '@/lib/db';
+import { openai } from "@ai-sdk/openai";
+import { groq } from "@ai-sdk/groq";
+import {
+  JSONValue,
+  StreamData,
+  streamText,
+  tool,
+  ToolExecutionOptions,
+} from "ai";
+import { z } from "zod";
+import { programs, users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import {
+  createDynamicRecommendationsTool,
+  renderProgramRecommendationsUI,
+} from "./chat-utils";
 
 function renderClassificationUI(category: string) {
-  switch(category) {
-    case 'RECOMMENDATION_REQUEST':
+  switch (category) {
+    case "RECOMMENDATION_REQUEST":
       return {
-        type: 'form',
+        type: "form",
         fields: [
           {
-            type: 'text',
-            label: 'Current Education Level',
+            type: "text",
+            label: "Current Education Level",
             required: true,
-            id: 'education'
+            id: "education",
           },
           {
-            type: 'multiselect',
-            label: 'Preferred Countries',
+            type: "multiselect",
+            label: "Preferred Countries",
             required: true,
-            id: 'countries',
-            options: ['USA', 'UK', 'Canada', 'Australia']
+            id: "countries",
+            options: ["USA", "UK", "Canada", "Australia"],
           },
           {
-            type: 'number',
+            type: "number",
             required: false,
-            label: 'Budget Range (USD)',
-            id: 'budget'
-          }
-        ]
+            label: "Budget Range (USD)",
+            id: "budget",
+          },
+        ],
       };
-    case 'HUMAN_COUNSELOR':
-      case 'HUMAN_COUNSELOR':
+    case "HUMAN_COUNSELOR":
+    case "HUMAN_COUNSELOR":
       return {
-        type: 'form',
+        type: "form",
         fields: [
           {
-            type: 'text',
-            label: 'Full Name',
-            id: 'name',
-            required: true
+            type: "text",
+            label: "Full Name",
+            id: "name",
+            required: true,
           },
           {
-            type: 'email',
-            label: 'Email Address',
-            id: 'email',
-            required: true
+            type: "email",
+            label: "Email Address",
+            id: "email",
+            required: true,
           },
           {
-            type: 'tel',
-            label: 'Phone Number',
-            id: 'phone',
-            required: true
+            type: "tel",
+            label: "Phone Number",
+            id: "phone",
+            required: true,
           },
           {
-            type: 'select',
-            label: 'Preferred Time to Call',
-            id: 'preferredTime',
+            type: "select",
+            label: "Preferred Time to Call",
+            id: "preferredTime",
             required: true,
             options: [
-              'Morning (9 AM - 12 PM)',
-              'Afternoon (12 PM - 5 PM)',
-              'Evening (5 PM - 8 PM)'
-            ]
+              "Morning (9 AM - 12 PM)",
+              "Afternoon (12 PM - 5 PM)",
+              "Evening (5 PM - 8 PM)",
+            ],
           },
           {
-            type: 'multiselect',
-            label: 'Target Countries',
-            id: 'targetCountries',
+            type: "multiselect",
+            label: "Target Countries",
+            id: "targetCountries",
             required: true,
-            options: ['USA', 'UK', 'Canada', 'Australia', 'Other']
+            options: ["USA", "UK", "Canada", "Australia", "Other"],
           },
           {
-            type: 'textarea',
-            label: 'Academic Interests',
-            id: 'academicInterests',
+            type: "textarea",
+            label: "Academic Interests",
+            id: "academicInterests",
             required: false,
-            placeholder: 'Tell us about your academic interests and goals'
+            placeholder: "Tell us about your academic interests and goals",
           },
           {
-            type: 'select',
-            label: 'Urgency',
-            id: 'urgency',
+            type: "select",
+            label: "Urgency",
+            id: "urgency",
             required: false,
-            options: ['high', 'medium', 'low']
-          }
-        ]
+            options: ["high", "medium", "low"],
+          },
+        ],
       };
     default:
       return null;
   }
 }
 
-// Helper function to render recommendations UI
-function renderProgramRecommendationsUI(programs: any[]) {
-  return {
-    type: 'programList',
-    programs: programs.map(p => ({
-      title: p.name,
-      university: p.university,
-      details: p.details,
-      matchScore: p.match,
-      cta: {
-        label: 'Learn More',
-        action: 'viewProgram',
-        id: p.id
-      }
-    }))
-  };
-}
-
 const collectUserInfoTool = tool({
-  description: 'Collect initial user information when starting the chat',
+  description: "Collect initial user information when starting the chat",
   parameters: z.object({
     name: z.string(),
     email: z.string().email(),
@@ -123,60 +115,61 @@ const collectUserInfoTool = tool({
     // Save or update user info in DB
     try {
       const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, email)
+        where: eq(users.email, email),
       });
 
       if (!existingUser) {
         await db.insert(users).values({
           fullName: name,
           email: email,
-          role: 'student',
+          role: "student",
         });
       }
 
       return {
         success: true,
         ui: {
-          type: 'welcomeMessage',
-          message: `Welcome ${name}! I'll be your educational counseling assistant. How can I help you today?`
-        }
+          type: "welcomeMessage",
+          message: `Welcome ${name}! I'll be your educational counseling assistant. How can I help you today?`,
+        },
       };
     } catch (error) {
-      console.error('Error saving user info:', error);
+      console.error("Error saving user info:", error);
       return {
         success: false,
-        error: 'Failed to save user information'
+        error: "Failed to save user information",
       };
     }
-  }
+  },
 });
 
 // Tool for classifying user queries
 const classifyQueryTool = tool({
-  description: 'Classify the user query into predefined categories',
+  description: "Classify the user query into predefined categories",
   parameters: z.object({
     category: z.enum([
-      'GENERAL_QUESTION',
-      'SPECIFIC_PROGRAM',
-      'RECOMMENDATION_REQUEST', 
-      'HUMAN_COUNSELOR',
-      'IRRELEVANT'
+      "GENERAL_QUESTION",
+      "SPECIFIC_PROGRAM",
+      "RECOMMENDATION_REQUEST",
+      "HUMAN_COUNSELOR",
+      "IRRELEVANT",
     ]),
     confidence: z.number().min(0).max(1),
-    reasoning: z.string()
+    reasoning: z.string(),
   }),
   execute: async ({ category, confidence, reasoning }) => {
     return {
       category,
       confidence,
       reasoning,
-      ui: renderClassificationUI(category) // Return UI based on classification
+      ui: renderClassificationUI(category), // Return UI based on classification
     };
-  }
+  },
 });
 
 const humanCounselorTool = tool({
-  description: 'Collect and save information for human counselor contact request',
+  description:
+    "Collect and save information for human counselor contact request",
   parameters: z.object({
     name: z.string(),
     email: z.string().email(),
@@ -184,21 +177,24 @@ const humanCounselorTool = tool({
     preferredTime: z.string(),
     academicInterests: z.string().optional(),
     targetCountries: z.array(z.string()).optional(),
-    urgency: z.enum(['high', 'medium', 'low']).optional(),
+    urgency: z.enum(["high", "medium", "low"]).optional(),
   }),
   execute: async (params) => {
     try {
       // Get or create user
       let user = await db.query.users.findFirst({
-        where: eq(users.email, params.email)
+        where: eq(users.email, params.email),
       });
 
       if (!user) {
-        const [newUser] = await db.insert(users).values({
-          fullName: params.name,
-          email: params.email,
-          role: 'student',
-        }).returning();
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            fullName: params.name,
+            email: params.email,
+            role: "student",
+          })
+          .returning();
         user = newUser;
       }
 
@@ -216,65 +212,76 @@ const humanCounselorTool = tool({
       return {
         success: true,
         ui: {
-          type: 'confirmation',
+          type: "confirmation",
           message: `Thank you ${params.name}! A counselor will contact you at ${params.preferredTime} on ${params.phone}.`,
-          details: "We've received your request and will match you with the most suitable counselor for your needs."
-        }
+          details:
+            "We've received your request and will match you with the most suitable counselor for your needs.",
+        },
       };
     } catch (error) {
-      console.error('Error saving counselor request:', error);
+      console.error("Error saving counselor request:", error);
       return {
         success: false,
-        error: 'Failed to process counselor request'
+        error: "Failed to process counselor request",
       };
     }
-  }
+  },
 });
 
 // Tool for searching vector DB for general questions
 const searchVectorDBTool = tool({
-  description: 'Search vector database for relevant information about general questions',
+  description:
+    "Search vector database for relevant information about general questions",
   parameters: z.object({
-    query: z.string()
+    query: z.string(),
   }),
   execute: async ({ query }) => {
     // TODO: Implement actual vector DB search
     return {
-      context: "Sample vector DB results for: " + query
+      context: "Sample vector DB results for: " + query,
     };
-  }
+  },
 });
 
 // Tool for searching programs database
 const searchProgramsTool = tool({
-  description: 'Search programs database for specific program information',
+  description: "Search programs database for specific program information",
   parameters: z.object({
-    programName: z.string()
-  }), 
+    programName: z.string(),
+  }),
   execute: async ({ programName }) => {
     // TODO: Implement actual DB query
     return {
-      program: "Sample program details for: " + programName
+      program: "Sample program details for: " + programName,
     };
-  }
+  },
 });
 
 // Tool for getting program recommendations
 const getRecommendationsTool = tool({
-  description: 'Show program recommendations based on student profile and preferences',
+  description:
+    "Show program recommendations based on student profile and preferences",
   parameters: z.object({
-    summary: z.string()
+    summary: z.string(),
   }),
   execute: async ({ summary }) => {
-    const programs = [{title: 'Sample Pgm', university: 'Sample Uni', details: 'Sample details', match: 0.8, id: 1}];
+    const programs = [
+      {
+        title: "Sample Pgm",
+        university: "Sample Uni",
+        details: "Sample details",
+        match: 0.8,
+        id: 1,
+      },
+    ];
     const totalResults = programs.length;
 
     return {
       programs,
       totalResults,
-      ui: renderProgramRecommendationsUI(programs)
+      ui: renderProgramRecommendationsUI(programs),
     };
-  }
+  },
 });
 
 // System prompt to guide the model's behavior
@@ -305,12 +312,12 @@ export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 type StreamResponse = {
   hls_url: string;
   mp4_url: string;
-}
+};
 
 async function generateVideo(text: string): Promise<StreamResponse | null> {
   const options = {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ttsAPIKey: process.env.TTS_API_KEY,
       simliAPIKey: process.env.SIMLI_API_KEY,
@@ -319,7 +326,8 @@ async function generateVideo(text: string): Promise<StreamResponse | null> {
       requestBody: {
         audioProvider: "PlayHT",
         text: text,
-        voice: "s3://voice-cloning-zero-shot/e5df2eb3-5153-40fa-9f6e-6e27bbb7a38e/original/manifest.json",
+        voice:
+          "s3://voice-cloning-zero-shot/e5df2eb3-5153-40fa-9f6e-6e27bbb7a38e/original/manifest.json",
         quality: "draft",
         speed: 1,
         sample_rate: 24000,
@@ -328,134 +336,161 @@ async function generateVideo(text: string): Promise<StreamResponse | null> {
         emotion: "female_happy",
         voice_guidance: 3,
         style_guidance: 20,
-        text_guidance: 1
-      }
-    })
+        text_guidance: 1,
+      },
+    }),
   };
 
   try {
-    const response  = await fetch('https://api.simli.ai/textToVideoStream', options);
+    const response = await fetch(
+      "https://api.simli.ai/textToVideoStream",
+      options
+    );
     const data: StreamResponse = await response.json();
     return data;
   } catch (error) {
-    console.error('Error generating video:', error);
+    console.error("Error generating video:", error);
     return null;
   }
 }
 
+const sessionTools = new Map<string, any>();
+
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, orgId, sessionId } = await req.json();
+
+  console.log("messages", messages);
+  console.log("organizationId", orgId);
+  console.log("sessionId", sessionId);
 
   const streamingData = new StreamData();
-  let currentMessage = '';
+  let currentMessage = "";
 
-  const result = streamText({
-    onChunk: ({chunk}) => {
-      // Check if it's a text delta and accumulate the message
-      if (chunk.type === 'text-delta') {
-        currentMessage += chunk.textDelta;
+  try {
+    let recommendationsTool = sessionTools.get(sessionId);
+
+    if (!recommendationsTool) {
+      recommendationsTool = await createDynamicRecommendationsTool(
+        orgId
+      );
+      if (!recommendationsTool) {
+        throw new Error("Failed to create recommendations tool");
       }
-    },
-    // model: groq('llama-3.3-70b-versatile'),
-    model: openai('gpt-4-turbo'),
-    system: SYSTEM_PROMPT,
-    messages,
-    maxSteps: 5,
-    tools: {
-      collectUserInfo: {
-        ...collectUserInfoTool,
-        execute: async (params, options) => {
-          const response = await collectUserInfoTool.execute(params, options);
-          // Append UI data to stream if present
-          if (response.ui) {
-            streamingData.append({
-              type: 'ui',
-              content: response.ui
-            });
-          }
-          return response;
-        }
-      },
-      humanCounselor: {
-        ...humanCounselorTool,
-        execute: async (params, options: ToolExecutionOptions) => {
-          const response = await humanCounselorTool.execute(params, options);
-          if (response.ui) {
-            streamingData.append({
-              type: 'ui',
-              content: response.ui,
-              toolCallId: options.toolCallId
-            });
-          }
-          return response;
-        }
-      },
-      classifyQuery: {
-        ...classifyQueryTool,
-        execute: async (params, options: ToolExecutionOptions) => {
-          const response = await classifyQueryTool.execute(params, options);
-          if (response.ui) {
-            // Transform fields to ensure JSON compatibility
-            const uiContent = {
-              type: response.ui.type,
-              fields: response.ui.fields.map(field => ({
-                ...field,
-                // Ensure optional properties are always defined with null instead of undefined
-                options: field.options || null,
-                required: field.required || false,
-                placeholder: field.placeholder || null
-              }))
-            };
-      
-            streamingData.append({
-              type: 'ui',
-              content: uiContent as JSONValue,
-              toolCallId: options.toolCallId
-            });
-          }
-          return response;
-        }
-      },
-      searchVectorDB: searchVectorDBTool,
-      searchPrograms: searchProgramsTool,
-      getRecommendations: {
-        ...getRecommendationsTool,
-        execute: async (params, options: ToolExecutionOptions) => {
-          const response = await getRecommendationsTool.execute(params, options);
-          if (response.ui) {
-            streamingData.append({
-              type: 'ui',
-              content: response.ui,
-              toolCallId: options.toolCallId
-            });
-          }
-          return response;
-        }
-      },
-    },
-    onFinish: async () => {
-      console.log('onFinish');
-      console.log('currentMessage', currentMessage);
-      if (currentMessage.trim()) {
-        const videoUrls = await generateVideo(currentMessage);
-        console.log('videoUrls', videoUrls);
-        if (videoUrls) {
-          streamingData.append({
-            type: 'videoUrls',
-            content: videoUrls
-          });
-        }
-      }
-      streamingData.close();
+      sessionTools.set(sessionId, recommendationsTool);
     }
-    
-  });
 
-  return result.toDataStreamResponse({
-    data: streamingData,
-  });
+    const result = streamText({
+      onChunk: ({ chunk }) => {
+        // Check if it's a text delta and accumulate the message
+        if (chunk.type === "text-delta") {
+          currentMessage += chunk.textDelta;
+        }
+      },
+      // model: groq('llama-3.3-70b-versatile'),
+      model: openai("gpt-4-turbo"),
+      system: SYSTEM_PROMPT,
+      messages,
+      maxSteps: 5,
+      tools: {
+        collectUserInfo: {
+          ...collectUserInfoTool,
+          execute: async (params, options) => {
+            const response = await collectUserInfoTool.execute(params, options);
+            // Append UI data to stream if present
+            if (response.ui) {
+              streamingData.append({
+                type: "ui",
+                content: response.ui,
+              });
+            }
+            return response;
+          },
+        },
+        humanCounselor: {
+          ...humanCounselorTool,
+          execute: async (params, options: ToolExecutionOptions) => {
+            const response = await humanCounselorTool.execute(params, options);
+            if (response.ui) {
+              streamingData.append({
+                type: "ui",
+                content: response.ui,
+                toolCallId: options.toolCallId,
+              });
+            }
+            return response;
+          },
+        },
+        classifyQuery: {
+          ...classifyQueryTool,
+          execute: async (params, options: ToolExecutionOptions) => {
+            const response = await classifyQueryTool.execute(params, options);
+            if (response.ui) {
+              // Transform fields to ensure JSON compatibility
+              const uiContent = {
+                type: response.ui.type,
+                fields: response.ui.fields.map((field) => ({
+                  ...field,
+                  // Ensure optional properties are always defined with null instead of undefined
+                  options: field.options || null,
+                  required: field.required || false,
+                  placeholder: field.placeholder || null,
+                })),
+              };
 
-  // const transformStream = new TransformStream({
+              streamingData.append({
+                type: "ui",
+                content: uiContent as JSONValue,
+                toolCallId: options.toolCallId,
+              });
+            }
+            return response;
+          },
+        },
+        searchVectorDB: searchVectorDBTool,
+        searchPrograms: searchProgramsTool,
+        getRecommendations: {
+          ...recommendationsTool,
+          execute: async (params, options: ToolExecutionOptions) => {
+            const response = await recommendationsTool.execute(params, options);
+            if (response.ui) {
+              streamingData.append({
+                type: "ui",
+                content: response.ui,
+                toolCallId: options.toolCallId,
+              });
+            }
+            return response;
+          },
+        },
+      },
+      onFinish: async () => {
+        console.log("onFinish");
+        console.log("currentMessage", currentMessage);
+        if (currentMessage.trim()) {
+          const videoUrls = await generateVideo(currentMessage);
+          console.log("videoUrls", videoUrls);
+          if (videoUrls) {
+            streamingData.append({
+              type: "videoUrls",
+              content: videoUrls,
+            });
+          }
+        }
+        streamingData.close();
+      },
+    });
+
+    return result.toDataStreamResponse({
+      data: streamingData,
+    });
+  } catch (error) {
+    console.error("Chat error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to process chat message" }),
+      { status: 500 }
+    );
+  }
+
   //   async transform(chunk, controller) {
   //     // Forward the original chunk
   //     console.log('insisde trasform');
@@ -485,7 +520,7 @@ export async function POST(req: Request) {
   //             mp4_url: videoUrls.mp4_url
   //           }
   //         })}\n\n`;
-          
+
   //         controller.enqueue(new TextEncoder().encode(videoEventData));
   //       }
   //       streamingData.close();

@@ -58,6 +58,8 @@ function EmbeddedChatPageComp() {
     }
   };
 
+  console.log('mergedConfig', mergedConfig)
+
   if (!initialized) {
     return <div>Initializing chat...</div>;
   }
@@ -72,7 +74,8 @@ function EmbeddedChatPageComp() {
       </button>
       <EmbeddedChat 
         apiKey={apiKey}
-        sessionId={sessionId || undefined}
+        orgId={mergedConfig.orgId}
+        sessionId={mergedConfig.sessionId || undefined}
         programId={programId || undefined}
         mode={mode as 'widget' | 'inline'}
         settings={mergedConfig.settings}

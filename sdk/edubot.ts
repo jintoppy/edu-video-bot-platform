@@ -42,7 +42,7 @@ export class EduBot {
 
   constructor(config: EduBotConfig) {
     this.config = {
-      baseUrl: "https://www.bots4ed.com",
+      baseUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.bots4ed.com",
       ...config,
     };
     this.api = createApiClient(config.apiKey, config.baseUrl);
@@ -110,6 +110,7 @@ export class EduBot {
               type: "CHAT_INITIALIZED",
               payload: {
                 sessionId: this.sessionId,
+                orgId: sessionData?.orgId,
                 settings: {
                   ...this.widgetOptions,
                   ...(sessionData?.settings || {}),
@@ -345,6 +346,7 @@ export class EduBot {
               video: false,
             },
           },
+          orgId: response.data?.data?.orgId,
           theme: {
             accentColor: "#6366F1",
             fontFamily: "Inter",

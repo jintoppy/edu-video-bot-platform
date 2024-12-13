@@ -1,6 +1,13 @@
 // src/sdk/build.ts
 import esbuild from "esbuild";
 import { copy } from "fs-extra";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const env = {
+  'process.env.NEXT_PUBLIC_APP_URL': JSON.stringify(process.env.NEXT_PUBLIC_APP_URL)
+};
 
 async function build() {
   // Build the main SDK
@@ -13,6 +20,7 @@ async function build() {
     outfile: "public/sdk/edubot.js",
     platform: "browser",
     target: ["es2020"],
+    define: env,
     footer: {
       js: "window.EduBot = EduBot.EduBot;", // Fix for ES Module export
     },
@@ -26,6 +34,7 @@ async function build() {
     format: "iife",
     outfile: "public/sdk/embedded.js",
     platform: "browser",
+    define: env,
     target: ["es2020"],
   });
 

@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({
       data: {
         sessionId: session.id,
+        orgId: validation.key.organizationId,
         settings: {
           theme: settings?.theme || {
             primaryColor: "#3B82F6",

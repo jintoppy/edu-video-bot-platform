@@ -18,6 +18,7 @@ const ProfileForm = dynamic(() => import("./ui/profile-form"));
 interface EmbeddedChatProps {
   apiKey: string;
   programId?: string;
+  orgId?: string;
   sessionId?: string;
   mode: "widget" | "inline";
   metadata?: Record<string, any>;
@@ -38,6 +39,7 @@ interface EmbeddedChatProps {
 
 export function EmbeddedChat({
   apiKey,
+  orgId,
   programId,
   mode,
   sessionId: sessionIdFromProps,
@@ -57,6 +59,9 @@ export function EmbeddedChat({
     null
   );
 
+  console.log('sessionId', sessionId);
+  console.log('orgId', orgId);
+
   const {
     messages,
     input,
@@ -67,6 +72,11 @@ export function EmbeddedChat({
     data: streamingData,
   } = useChat({
     api: "/api/v1/sdk/chat/stream",
+    sendExtraMessageFields: true,
+    body: {
+      orgId,
+      sessionId
+    },
     initialMessages: settings?.messages?.welcome
       ? [
           {

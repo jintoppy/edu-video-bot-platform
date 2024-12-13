@@ -46,6 +46,7 @@ export interface ApiChatResponse extends ApiResponse<ChatResponse> {}
 export interface InitResponse
   extends ApiResponse<{
     sessionId: string;
+    orgId: string;
     settings: ChatSettings;
   }> {}
 
