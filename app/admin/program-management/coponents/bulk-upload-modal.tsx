@@ -324,6 +324,8 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     // Create template rows
     const templateRows = [];
 
+    const columns = {};
+
     // First row: Header names in object dot notation
     const headers: string[] = ["name"];
     schema.sections.forEach((section) => {
@@ -338,6 +340,8 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
       });
     }
     templateRows.push(headers);
+
+    console.log(templateRows)
 
     // Second row: Instructions
     const instructionsRow = headers.map(header => 
@@ -386,7 +390,7 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     });
     templateRows.push(exampleRow);
 
-    console.log(templateRows);
+    // console.log(templateRows);
 
     // Create workbook
     const wb = XLSX.utils.book_new();
