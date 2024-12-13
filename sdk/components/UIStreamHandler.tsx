@@ -12,11 +12,9 @@ export interface UIComponent {
 export const UIStreamHandler = ({
   streamingData,
   setUIComponent,
-  setVideoComponent,
 }: {
   streamingData?: JSONValue[];
   setUIComponent: React.Dispatch<React.SetStateAction<UIComponent | null>>;
-  setVideoComponent: React.Dispatch<React.SetStateAction<UIComponent | null>>;
 }) => {
   useEffect(() => {
     if (!streamingData?.length) return;
@@ -36,13 +34,6 @@ export const UIStreamHandler = ({
         setUIComponent({
           type: (lastData.content as any).type,
           data: lastData.content as any,
-          messageId: (lastData as any).messageId,
-          isVisible: true,
-        });
-      } else if (lastData.type === "videoUrls") {
-        setVideoComponent({
-          type: "videoUrls",
-          data: lastData.content,
           messageId: (lastData as any).messageId,
           isVisible: true,
         });

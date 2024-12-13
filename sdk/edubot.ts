@@ -74,6 +74,7 @@ export class EduBot {
       params.append("fontFamily", this.widgetOptions.theme.fontFamily || "");
     }
 
+    params.append('_t', `${Date.now()}-${Math.random().toString(36).substring(7)}`);
     this.iframe.src = `${
       this.config.baseUrl
     }/sdk/embedded-chat?${params.toString()}`;

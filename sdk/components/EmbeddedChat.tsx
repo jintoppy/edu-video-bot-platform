@@ -1,5 +1,5 @@
 // src/sdk/components/EmbeddedChat.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Minimize2, Maximize2, MessageSquare } from "lucide-react";
 import { ChatInterface } from "./ChatInterface";
 import { VideoPlayer } from "./VideoPlayer";
@@ -9,11 +9,15 @@ import { UIComponent, UIStreamHandler } from "./UIStreamHandler";
 import { Message, useChat } from "ai/react";
 import { AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
-
+import { SimliClient } from "simli-client";
+import Pusher from "pusher-js";
+import VideoBox from "./VideoBox";
 // Dynamically import UI components
 const ProgramList = dynamic(() => import("./ui/program-list"));
 const ContactForm = dynamic(() => import("./ui/contact-form"));
 const ProfileForm = dynamic(() => import("./ui/profile-form"));
+
+const simliClient = new SimliClient();
 
 interface EmbeddedChatProps {
   apiKey: string;
@@ -54,13 +58,17 @@ export function EmbeddedChat({
   const [sessionId, setSessionId] = useState<string | null | undefined>(
     sessionIdFromProps
   );
+  const isSimliInitialized = useRef(false);
   const [uiComponent, setUIComponent] = useState<UIComponent | null>(null);
-  const [videoComponent, setVideoComponent] = useState<UIComponent | null>(
-    null
-  );
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isAvatarVisible, setIsAvatarVisible] = useState(false);
+  const [error, setError] = useState("");
 
-  console.log('sessionId', sessionId);
-  console.log('orgId', orgId);
+  console.log('error', error);
+
+  console.log("sessionId", sessionId);
+  console.log("orgId", orgId);
 
   const {
     messages,
@@ -75,7 +83,7 @@ export function EmbeddedChat({
     sendExtraMessageFields: true,
     body: {
       orgId,
-      sessionId
+      sessionId,
     },
     initialMessages: settings?.messages?.welcome
       ? [
@@ -99,6 +107,81 @@ export function EmbeddedChat({
   );
 
   const lastMessage = filteredMessages[filteredMessages.length - 1];
+
+  // Initialize Simli client
+  useEffect(() => {
+    if (settings?.features?.videoBot && videoRef.current && audioRef.current && !isSimliInitialized.current) {
+      console.log("Initializing Simli client");
+      simliClient.Initialize({
+        apiKey: process.env.NEXT_PUBLIC_SIMLI_API_KEY || "",
+        faceID: process.env.NEXT_PUBLIC_SIMLI_FACE_ID || "",
+        handleSilence: true,
+        maxSessionLength: 3600,
+        maxIdleTime: 600,
+        videoRef: {
+          current: videoRef.current,
+        },
+        audioRef: {
+          current: audioRef.current,
+        },
+      });
+
+      simliClient.on("connected", () => {
+        console.log("SimliClient connected");
+        setIsAvatarVisible(true);
+        const audioData = new Uint8Array(6000).fill(0);
+        simliClient.sendAudioData(audioData);
+      });
+
+      simliClient.start();
+      isSimliInitialized.current = true;
+    }
+
+    return () => {
+      if (simliClient) {
+        simliClient.close();
+      }
+    };
+  }, [settings?.features?.videoBot, videoRef.current, audioRef.current]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    });
+
+    const channel = pusher.subscribe(`chat-${sessionId}`);
+
+    // channel.bind("text-chunk", (data: { text: string }) => {
+    //   // Handle incoming text chunks
+    //   append({
+    //     id: Date.now().toString(),
+    //     role: "assistant",
+    //     content: data.text,
+    //   });
+    // });
+
+    channel.bind(
+      "audio-chunk",
+      (data: { chunk: number[]; chunkIndex: number }) => {
+        console.log('got audio chunk');
+        if (simliClient && isAvatarVisible) {
+          // Convert array back to Uint8Array and send to Simli
+          const audioData = new Uint8Array(data.chunk);
+          simliClient.sendAudioData(audioData);
+        }
+      }
+    );
+
+    channel.bind("error", (data: { message: string }) => {
+      setError(data.message);
+    });
+
+    return () => {
+      pusher.unsubscribe(`chat-${sessionId}`);
+    };
+  }, [sessionId, isAvatarVisible, append]);
 
   const renderUIComponent = (component: UIComponent) => {
     switch (component.type) {
@@ -188,6 +271,8 @@ export function EmbeddedChat({
       } as React.CSSProperties)
     : {};
 
+  console.log('settings', settings)
+
   return (
     <div className="h-full w-full" style={themeStyles}>
       <div
@@ -195,12 +280,12 @@ export function EmbeddedChat({
         style={{ fontFamily: theme?.fontFamily }}
       >
         {/* Chat Header */}
-        <div className="flex flex-col">          
+        <div className="flex flex-col">
           <div
             className="flex items-center justify-between px-8 mr-4 py-3 border-b"
             style={{ backgroundColor: theme?.secondaryColor || "#F8FAFC" }}
           >
-            <div className="flex items-center space-x-4">              
+            <div className="flex items-center space-x-4">
               <span className="font-medium">Educational Counselor</span>
             </div>
 
@@ -264,32 +349,16 @@ export function EmbeddedChat({
           <div className="flex flex-1">
             {/* Left Panel - Video/UI Content */}
             <div className="w-1/2 border-r flex flex-1 flex-col">
-              {settings?.features?.videoBot ? (
                 <div className="aspect-video bg-gray-100 relative">
-                 {videoComponent && videoComponent.data && (
-                  <VideoPlayer
-                    hlsUrl={videoComponent.data.hls_url}
-                    mp4Url={videoComponent.data.mp4_url}
-                  />
-                )}
+                  <VideoBox videoRef={videoRef} audioRef={audioRef} />
                 </div>
-              ) : (
-                <div className="aspect-video bg-gray-50 flex items-center justify-center">
-                  <img
-                    src="/counselor-avatar.jpg"
-                    alt="AI Counselor"
-                    className="w-32 h-32 rounded-full object-cover"
-                  />
-                </div>
-              )}
-
               {/* Generated UI Content */}
               <div className="flex-1 overflow-auto p-4">
                 <AnimatePresence>
                   {uiComponent?.isVisible && (
                     <div className="my-4">{renderUIComponent(uiComponent)}</div>
                   )}
-                </AnimatePresence>                
+                </AnimatePresence>
               </div>
             </div>
 
@@ -310,7 +379,6 @@ export function EmbeddedChat({
       <UIStreamHandler
         streamingData={streamingData || []}
         setUIComponent={setUIComponent}
-        setVideoComponent={setVideoComponent}
       />
     </div>
   );
