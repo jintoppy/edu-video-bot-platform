@@ -324,30 +324,35 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     // Create template rows
     const templateRows = [];
 
-    // Create headers array (we'll use this for structure but not push it)
-    const headers: string[] = ["name"];
+    // First row: Header names in object dot notation
+    const headerRow: Record<string, string> = {
+      name: "name"
+    };
     schema.sections.forEach((section) => {
       const sectionKey = section.name.toLowerCase().replace(/\s+/g, "_");
       section.fields.forEach((field) => {
-        headers.push(`${sectionKey}.${field.name}`);
+        const header = `${sectionKey}.${field.name}`;
+        headerRow[header] = header;
       });
     });
     if (schema.eligibilityCriteria) {
       schema.eligibilityCriteria.fields.forEach((field) => {
-        headers.push(`eligibility.${field.name}`);
+        const header = `eligibility.${field.name}`;
+        headerRow[header] = header;
       });
     }
+    templateRows.push(headerRow);
 
-    // Add instructions row
+    // Second row: Instructions
     const instructionsRow: Record<string, string> = {};
-    headers.forEach(header => {
+    Object.keys(headerRow).forEach(header => {
       instructionsRow[header] = header === "name" 
         ? "Instructions: Fill in the program details below. Required fields are marked with (Required)"
         : "";
     });
     templateRows.push(instructionsRow);
 
-    // Add header labels row (this will be our column headers)
+    // Third row: Header labels
     const headerLabels: Record<string, string> = {
       name: "Program Name (Required)",
     };
@@ -368,35 +373,34 @@ export function BulkUploadModal({ schema, onUpload }: BulkUploadModalProps) {
     }
     templateRows.push(headerLabels);
 
-    // Add example row with more meaningful examples
-    const exampleRow = Object.keys(headers).reduce((acc, header) => {
+    // Fourth row: Example data
+    const exampleRow: Record<string, string> = {};
+    Object.keys(headerRow).forEach(header => {
       if (header === "name") {
-        acc[header] = "Master of Business Administration";
+        exampleRow[header] = "Master of Business Administration";
       } else {
         const [section, field] = header.split(".");
-        switch (field?.toLowerCase()) {
-          case "duration":
-            acc[header] = "2 years";
-            break;
-          case "tuition":
-            acc[header] = "50000";
-            break;
-          case "location":
-            acc[header] = "New York";
-            break;
-          default:
-            acc[header] = `Example ${field}`;
+        if (section === "eligibility") {
+          exampleRow[header] = schema.eligibilityCriteria?.fields.find(f => f.name === field)?.type === "number" 
+            ? "75" 
+            : "Example Value";
+        } else {
+          switch (field?.toLowerCase()) {
+            case "duration":
+              exampleRow[header] = "2 years";
+              break;
+            case "tuition":
+              exampleRow[header] = "50000";
+              break;
+            case "location":
+              exampleRow[header] = "New York";
+              break;
+            default:
+              exampleRow[header] = `Example ${field}`;
+          }
         }
       }
-      return acc;
-    }, {} as Record<string, string>);
-
-    if (schema.eligibilityCriteria) {
-      schema.eligibilityCriteria.fields.forEach((field) => {
-        exampleRow[`eligibility.${field.name}`] =
-          field.type === "number" ? "75" : "Example Value";
-      });
-    }
+    });
     templateRows.push(exampleRow);
 
     console.log(templateRows);
