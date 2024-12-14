@@ -134,11 +134,7 @@ export class EduBot {
       if (this.iframe && event.source === this.iframe.contentWindow) {
         const message = event.data as EduBotEvent;
 
-        switch (message.type) {
-          case "CHAT_INITIALIZED":
-            this.sessionId = message.payload.data?.sessionId ?? nanoid();
-            this.emit("chatInitialized", message.payload);
-            break;
+        switch (message.type) {         
           case "CHAT_CLOSE":
             this.endChat();
             break;

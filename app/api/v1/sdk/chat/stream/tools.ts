@@ -3,50 +3,164 @@ import { tool } from "ai";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { documentation, documentEmbeddings, users } from "@/lib/db/schema";
+import {
+  chatMessages,
+  chatSessions,
+  counselorAssignments,
+  documentation,
+  documentEmbeddings,
+  users,
+} from "@/lib/db/schema";
 import {
   createDynamicRecommendationsTool,
   renderProgramRecommendationsUI,
 } from "./chat-utils";
 import { embeddings, loadVectorStore } from "@/lib/embedding";
+import { se } from "date-fns/locale";
 
-export const collectUserInfoTool = tool({
-  description: "Collect initial user information when starting the chat",
-  parameters: z.object({
-    name: z.string(),
-    email: z.string().email(),
-  }),
-  execute: async ({ name, email }) => {
-    // Save or update user info in DB
+const sessionContext = new Map<
+  string,
+  {
+    chatSessionId: string;
+    userId: string | null;
+    startTime: Date;
+  }
+>();
+
+export const logChatMessage = async ({
+  sessionId,
+  message,
+  messageType,
+}: {
+  sessionId: string;
+  message: string;
+  messageType: string;
+}) => {
     try {
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, email),
-      });
-
-      if (!existingUser) {
-        await db.insert(users).values({
-          fullName: name,
-          email: email,
-          role: "student",
-        });
-      }
-
-      return {
-        success: true,
-        ui: {
-          type: "welcomeMessage",
-          message: `Welcome ${name}! I'll be your educational counseling assistant. How can I help you today?`,
-        },
-      };
+        console.log("inside logChatMessage", sessionId, message, messageType);
+        const context = sessionContext.get(sessionId);
+      
+        if (!context) {
+          const existingSession = await db.query.chatSessions.findFirst({
+            where: eq(chatSessions.id, sessionId),
+          });
+          if (existingSession) {
+            sessionContext.set(sessionId, {
+              chatSessionId: existingSession.id,
+              userId: null,
+              startTime: new Date(),
+            });
+          }
+        }
+      
+        if (context) {
+          console.log("context", context);
+          console.log('inserting chat message');
+          const [insertedMessage] = await db.insert(chatMessages).values({
+            sessionId: context.chatSessionId,
+            userId: context.userId,
+            messageType:
+              messageType === "user_message" ? "user_message" : "bot_message",
+            content: message,
+          })
+          .returning();
+          console.log("Message logged successfully:", insertedMessage);
+        }
     } catch (error) {
-      console.error("Error saving user info:", error);
-      return {
-        success: false,
-        error: "Failed to save user information",
-      };
+        console.log('error logging chat message', error);
     }
-  },
-});
+ 
+};
+
+export const createCollectUserInfoTool = (uiChatSessionId: string) => {
+  const collectUserInfoTool = tool({
+    description: "Collect initial user information when starting the chat",
+    parameters: z.object({
+      name: z.string(),
+      email: z.string().email(),
+    }),
+    execute: async ({ name, email }) => {
+      // Save or update user info in DB
+      try {
+        let userId;
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.email, email),
+        });
+
+        if (!existingUser) {
+          const [newUser] = await db
+            .insert(users)
+            .values({
+              fullName: name,
+              email: email,
+              role: "student",
+            })
+            .returning();
+          userId = newUser.id;
+        } else {
+          userId = existingUser.id;
+        }
+
+        const existingSession = await db.query.chatSessions.findFirst({
+          where: eq(chatSessions.id, uiChatSessionId),
+        });
+
+        let session;
+        if (existingSession) {
+          // Update existing session with userId
+          const [updatedSession] = await db
+            .update(chatSessions)
+            .set({
+              studentId: userId,
+              updatedAt: new Date(),
+            })
+            .where(eq(chatSessions.id, uiChatSessionId))
+            .returning();
+
+          session = updatedSession;
+        } else {
+          // Create new session
+          const [newSession] = await db
+            .insert(chatSessions)
+            .values({
+              id: uiChatSessionId, // Use the provided ID
+              studentId: userId,
+              communicationMode: "text_only",
+              startTime: new Date(),
+              category: "general_query",
+              status: "active",
+            })
+            .returning();
+
+          session = newSession;
+        }
+
+        sessionContext.set(uiChatSessionId, {
+          chatSessionId: session.id,
+          userId: userId,
+          startTime: new Date(),
+        });
+
+        return {
+          success: true,
+          sessionId: session.id,
+          ui: {
+            type: "welcomeMessage",
+            message: `Welcome ${name}! I'll be your educational counseling assistant. How can I help you today?`,
+          },
+        };
+      } catch (error) {
+        console.error("Error saving user info:", error);
+        return {
+          success: false,
+          error: "Failed to save user information",
+        };
+      }
+    },
+  });
+  return collectUserInfoTool;
+};
+
 export function renderClassificationUI(category: string) {
   switch (category) {
     case "RECOMMENDATION_REQUEST":
@@ -137,96 +251,142 @@ export function renderClassificationUI(category: string) {
 }
 
 // Tool for classifying user queries
-export const classifyQueryTool = tool({
-  description: `
-  Classify the user query into predefined categories
-    GENERAL_QUESTION: general questions about foreign education, visa related topics, services provided, question about the consultancy, any similar education related toopics
-    SPECIFIC_PROGRAM: if user is asking about a particular education program
-    RECOMMENDATION_REQUEST: if user asks to give some program recommendation based on their background, or asks about if user is elibile for a program
-    HUMAN_COUNSELOR: if user asks to connect with human counselor
-    IRRELEVANT: if user asks something which does not fit into above categories
-  `,
-  parameters: z.object({
-    category: z.enum([
-      "GENERAL_QUESTION",
-      "SPECIFIC_PROGRAM",
-      "RECOMMENDATION_REQUEST",
-      "HUMAN_COUNSELOR",
-      "IRRELEVANT",
-    ]),
-    confidence: z.number().min(0).max(1),
-    reasoning: z.string(),
-  }),
-  execute: async ({ category, confidence, reasoning }) => {
-    return {
-      category,
-      confidence,
-      reasoning,
-      ui: renderClassificationUI(category), // Return UI based on classification
-    };
-  },
-});
+export const createClassifyQueryTool = (uiChatSessionId: string) => {
+  const classifyQueryTool = tool({
+    description: `
+        Classify the user query into predefined categories
+          GENERAL_QUESTION: general questions about foreign education, visa related topics, services provided, question about the consultancy, any similar education related toopics
+          SPECIFIC_PROGRAM: if user is asking about a particular education program
+          RECOMMENDATION_REQUEST: if user asks to give some program recommendation based on their background, or asks about if user is elibile for a program
+          HUMAN_COUNSELOR: if user asks to connect with human counselor
+          IRRELEVANT: if user asks something which does not fit into above categories
+        `,
+    parameters: z.object({
+      category: z.enum([
+        "GENERAL_QUESTION",
+        "SPECIFIC_PROGRAM",
+        "RECOMMENDATION_REQUEST",
+        "HUMAN_COUNSELOR",
+        "IRRELEVANT",
+      ]),
+      confidence: z.number().min(0).max(1),
+      reasoning: z.string(),
+    }),
+    execute: async ({ category, confidence, reasoning }) => {
+      const context = sessionContext.get(uiChatSessionId);
+      if (context) {
+        // Update chat session category
+        let categoryTxt: any = "general_query";
+        switch (category) {
+          case "GENERAL_QUESTION":
+            categoryTxt = "general_query";
+            break;
+          case "SPECIFIC_PROGRAM":
+            categoryTxt = "program_review";
+            break;
+          case "RECOMMENDATION_REQUEST":
+            categoryTxt = "recommendation_request";
+            break;
+          case "HUMAN_COUNSELOR":
+            categoryTxt = "follow_up_request";
+            break;
+          default:
+            categoryTxt = "general_query";
+            break;
+        }
+        await db
+          .update(chatSessions)
+          .set({
+            category: categoryTxt,
+            updatedAt: new Date(),
+          })
+          .where(eq(chatSessions.id, context.chatSessionId));
+      }
+      return {
+        category,
+        confidence,
+        reasoning,
+        ui: renderClassificationUI(category), // Return UI based on classification
+      };
+    },
+  });
+  return classifyQueryTool;
+};
 
-export const humanCounselorTool = tool({
-  description:
-    "Collect and save information for human counselor contact request",
-  parameters: z.object({
-    name: z.string(),
-    email: z.string().email(),
-    phone: z.string(),
-    preferredTime: z.string(),
-    academicInterests: z.string().optional(),
-    targetCountries: z.array(z.string()).optional(),
-    urgency: z.enum(["high", "medium", "low"]).optional(),
-  }),
-  execute: async (params) => {
-    try {
-      // Get or create user
-      let user = await db.query.users.findFirst({
-        where: eq(users.email, params.email),
+export const createHumanCounselorTool = (uiChatSessionId: string) => {
+    const humanCounselorTool = tool({
+        description:
+          "Collect and save information for human counselor contact request",
+        parameters: z.object({
+          name: z.string(),
+          email: z.string().email(),
+          phone: z.string(),
+          preferredTime: z.string(),
+          academicInterests: z.string().optional(),
+          targetCountries: z.array(z.string()).optional(),
+          urgency: z.enum(["high", "medium", "low"]).optional(),
+        }),
+        execute: async (params) => {
+          try {
+            // Get or create user
+            let user = await db.query.users.findFirst({
+              where: eq(users.email, params.email),
+            });
+      
+            if (!user) {
+              const [newUser] = await db
+                .insert(users)
+                .values({
+                  fullName: params.name,
+                  email: params.email,
+                  role: "student",
+                })
+                .returning();
+              user = newUser;
+            }
+      
+            const [assignment] = await db
+                .insert(counselorAssignments)
+                .values({
+                  studentId: user.id,
+                  conversationId: uiChatSessionId,
+                  status: "open",
+                  priority: params.urgency || "medium",
+                  metadata: {
+                    preferredTime: params.preferredTime,
+                    phone: params.phone,
+                    academicInterests: params.academicInterests,
+                    targetCountries: params.targetCountries,
+                  },
+                  notes: `Contact requested for ${params.preferredTime}. 
+                         Academic Interests: ${params.academicInterests || 'Not specified'}
+                         Target Countries: ${params.targetCountries?.join(', ') || 'Not specified'}`
+                })
+                .returning();
+      
+            return {
+              success: true,
+              ui: {
+                type: "confirmation",
+                message: `Thank you ${params.name}! A counselor will contact you at ${params.preferredTime} on ${params.phone}.`,
+                details:
+                  "We've received your request and will match you with the most suitable counselor for your needs.",
+              },
+            };
+          } catch (error) {
+            console.error("Error saving counselor request:", error);
+            return {
+              success: false,
+              error: "Failed to process counselor request",
+            };
+          }
+        },
       });
 
-      if (!user) {
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            fullName: params.name,
-            email: params.email,
-            role: "student",
-          })
-          .returning();
-        user = newUser;
-      }
+      return humanCounselorTool;
+}
 
-      // Save counselor request
-      // await db.insert(counselorRequests).values({
-      //   userId: user.id,
-      //   phoneNumber: params.phone,
-      //   preferredTime: params.preferredTime,
-      //   academicInterests: params.academicInterests || '',
-      //   targetCountries: params.targetCountries || [],
-      //   urgency: params.urgency || 'medium',
-      //   status: 'pending'
-      // });
 
-      return {
-        success: true,
-        ui: {
-          type: "confirmation",
-          message: `Thank you ${params.name}! A counselor will contact you at ${params.preferredTime} on ${params.phone}.`,
-          details:
-            "We've received your request and will match you with the most suitable counselor for your needs.",
-        },
-      };
-    } catch (error) {
-      console.error("Error saving counselor request:", error);
-      return {
-        success: false,
-        error: "Failed to process counselor request",
-      };
-    }
-  },
-});
 
 const vectorStore = await loadVectorStore();
 // Tool for searching vector DB for general questions

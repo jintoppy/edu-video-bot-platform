@@ -1,0 +1,1 @@
+ALTER TABLE "chat_sessions" ADD COLUMN "ui_session_id" uuid;

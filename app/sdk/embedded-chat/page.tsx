@@ -77,19 +77,14 @@ function EmbeddedChatPageComp() {
 
   const [mergedConfig, setMergedConfig] = React.useState<typeof DEFAULT_CONFIG | null>(null);
 
-  React.useEffect(() => {
-    if (!config) {
-      setConfig(DEFAULT_CONFIG);
-      return;
-    }
-
-    if (!apiKey) {
+  React.useEffect(() => {    
+    if (!apiKey || !config) {
       return;
     }
 
     // Merge URL parameters with received config
     const newMergedConfig = {
-      ...config,
+      ...(config || {}),
       settings: {
         ...(config?.settings || {}),
         theme: {

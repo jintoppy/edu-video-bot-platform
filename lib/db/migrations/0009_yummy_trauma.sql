@@ -1,0 +1,4 @@
+ALTER TABLE "public"."chat_sessions" ALTER COLUMN "session_category" SET DATA TYPE text;--> statement-breakpoint
+DROP TYPE "public"."session_category";--> statement-breakpoint
+CREATE TYPE "public"."session_category" AS ENUM('initial_assessment', 'program_review', 'document_review', 'follow_up_request', 'mock_interview', 'general_query', 'application_support', 'visa_guidance', 'scholarship_review', 'test_preparation', 'program_enquiry', 'recommendation_request');--> statement-breakpoint
+ALTER TABLE "public"."chat_sessions" ALTER COLUMN "session_category" SET DATA TYPE "public"."session_category" USING "session_category"::"public"."session_category";

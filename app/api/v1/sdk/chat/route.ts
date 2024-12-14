@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
     let chatSessionId = sessionId;
     if (!chatSessionId) {
       const [session] = await db.insert(chatSessions).values({
-        studentId: metadata.userId,
         communicationMode: "text_only",
+        uiSessionId: sessionId,
         category: "general_query",
         startTime: new Date(),
         status: "active",

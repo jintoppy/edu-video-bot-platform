@@ -9,13 +9,15 @@ import {
 } from "ai";
 import { createDynamicRecommendationsTool } from "./chat-utils";
 import {
-  classifyQueryTool,
-  collectUserInfoTool,
-  humanCounselorTool,
+  createClassifyQueryTool,
+  createCollectUserInfoTool,
+  createHumanCounselorTool,
+  logChatMessage,
   searchProgramsTool,
   searchVectorDBTool,
 } from "./tools";
 import { generateSpeech, pusher } from "./video-utils";
+import { create } from "domain";
 
 // System prompt to guide the model's behavior
 const SYSTEM_PROMPT = `You are a virtual educational counseling assistant for an education consultancy. First, collect user's basic information if not already provided.
@@ -37,7 +39,7 @@ For counselor requests:
 
 For general questions about foreign education or about the services provided or similar topics, or if there is any question about the consultancy, use searchVectorDBTool to find relevant information. If no relevant information is found, inform the same and suggest to connect with Human Counselor.
 For specific programs, provide detailed program information.
-For program recommendations or eligiblity check, call getRecommendations after collecting required parameters. if there are any programs available, just mention "Here are the programs". If no programs available, just mentions "No suitable programs found"
+For program recommendations or eligiblity check, call getRecommendations after collecting required parameters. if there are any programs available, just mention "Here are the programs". If no programs available, just mentions "No suitable programs found". Do not mention anything else. 
 For irrelevant queries, politely redirect to education-related topics.
 
 Important Notes: 
@@ -93,7 +95,10 @@ async function generateVideo(text: string): Promise<StreamResponse | null> {
   }
 }
 
-const sessionTools = new Map<string, any>();
+const sessionRecommendationTool = new Map<string, any>();
+const sessionCollectUserInfoTool = new Map<string, any>();
+const sessionClassifyQueryTool = new Map<string, any>();
+const sessionHumanCounselorTool = new Map<string, any>();
 
 export async function POST(req: Request) {
   const { messages, orgId, sessionId } = await req.json();
@@ -108,21 +113,51 @@ export async function POST(req: Request) {
   let messageBuffer = "";
 
   try {
-    let recommendationsTool = sessionTools.get(sessionId);
+    let recommendationsTool = sessionRecommendationTool.get(sessionId);
+    let collectUserInfoTool = sessionCollectUserInfoTool.get(sessionId);
+    let classifyQueryTool = sessionClassifyQueryTool.get(sessionId);
+    let humanCounselorTool = sessionHumanCounselorTool.get(sessionId);
 
     if (!recommendationsTool) {
       recommendationsTool = await createDynamicRecommendationsTool(orgId);
       if (!recommendationsTool) {
         throw new Error("Failed to create recommendations tool");
       }
-      sessionTools.set(sessionId, recommendationsTool);
+      sessionRecommendationTool.set(sessionId, recommendationsTool);
     }
 
+    if (!collectUserInfoTool) {
+      collectUserInfoTool = createCollectUserInfoTool(sessionId);
+      if (!collectUserInfoTool) {
+        throw new Error("Failed to create collectUserInfoTool tool");
+      }
+      sessionCollectUserInfoTool.set(sessionId, collectUserInfoTool);
+    }
+
+    if (!classifyQueryTool) {
+      classifyQueryTool = createClassifyQueryTool(sessionId);
+      if (!classifyQueryTool) {
+        throw new Error("Failed to create collectUserInfoTool tool");
+      }
+      sessionClassifyQueryTool.set(sessionId, classifyQueryTool);
+    }
+
+    if(!humanCounselorTool) {
+      humanCounselorTool = createHumanCounselorTool(sessionId);
+      if(!humanCounselorTool) {
+        throw new Error("Failed to create humanCounselorTool tool");
+      }
+      sessionHumanCounselorTool.set(sessionId, humanCounselorTool);  
+    }
+
+    let completeResponse = "";
+    const userMessage = messages[messages.length - 1];    
     const result = streamText({
       onChunk: async ({ chunk }) => {
         if (chunk.type === "text-delta") {
           currentMessageChunk += chunk.textDelta;
           messageBuffer += chunk.textDelta;
+          completeResponse += chunk.textDelta;
 
           // Process text in natural language chunks (sentences or phrases)
           if (currentMessageChunk.match(/[.!?]\s|[:;]\s|\n/)) {
@@ -180,7 +215,7 @@ export async function POST(req: Request) {
               // Transform fields to ensure JSON compatibility
               const uiContent = {
                 type: response.ui.type,
-                fields: response.ui.fields.map((field) => ({
+                fields: response.ui.fields.map((field: any) => ({
                   ...field,
                   // Ensure optional properties are always defined with null instead of undefined
                   options: field.options || null,
@@ -231,6 +266,16 @@ export async function POST(req: Request) {
           });
           await generateSpeech(currentMessageChunk, sessionId);
         }
+        await logChatMessage({
+          sessionId,
+          message: userMessage.content,
+          messageType: "user_message",
+        });
+        await logChatMessage({
+          sessionId,
+          message: completeResponse,
+          messageType: "bot_message",
+        });
         streamingData.close();
       },
     });

@@ -34,13 +34,15 @@ export const sessionCategoryEnum = pgEnum("session_category", [
   "initial_assessment", // First counseling session
   "program_review", // Specific program discussion
   "document_review", // Review of student documents/applications
-  "follow_up", // Follow-up consultation
+  "follow_up_request", // Follow-up consultation
   "mock_interview", // Interview preparation
   "general_query", // General questions about programs/process
   "application_support", // Help with application process
   "visa_guidance", // Visa-related queries
   "scholarship_review", // Scholarship-related discussion
   "test_preparation", // Study/test preparation guidance
+  "program_enquiry", // Program-related queries
+  "recommendation_request", // Program recommendations
 ]);
 
 export const messageTypeEnum = pgEnum("message_type", [
@@ -273,6 +275,8 @@ export const chatSessions = pgTable("chat_sessions", {
 
   // Program reference (optional)
   programId: uuid("program_id").references(() => programs.id),
+
+  uiSessionId: uuid("ui_session_id"),
 
   // Session timing
   startTime: timestamp("start_time").notNull(),

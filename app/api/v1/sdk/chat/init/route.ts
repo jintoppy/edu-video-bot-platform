@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { programId, metadata = {} } = body;
+    const { programId, sessionId, metadata = {} } = body;
 
     // Get organization settings for theme
     const settings = await db.query.organizationSettings.findFirst({
@@ -43,11 +43,11 @@ export async function POST(req: NextRequest) {
 
     // Create new chat session
     const [session] = await db.insert(chatSessions).values({
-      studentId: metadata.userId || null,
       communicationMode: "text_only",
       category: "general_query",
       startTime: new Date(),
       status: "active",
+      uiSessionId: sessionId,
       programId: programId || null,
       metadata: {
         organizationId: validation.key.organizationId,
