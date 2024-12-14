@@ -38,6 +38,8 @@ export async function GET(
         assignment: {
           counselorId: counselorAssignments.counselorId,
           status: counselorAssignments.status,
+          notes: counselorAssignments.notes,
+          metadata: counselorAssignments.metadata
         }
       })
       .from(chatSessions)
