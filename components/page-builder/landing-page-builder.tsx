@@ -130,7 +130,7 @@ export function LandingPageBuilder() {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className="p-4 bg-secondary rounded-md flex items-center justify-between"
+                        className="p-4 bg-blue-50 border border-blue-100 rounded-md flex items-center justify-between hover:bg-blue-100 transition-colors"
                       >
                         <span>{section.label}</span>
                         <Button
