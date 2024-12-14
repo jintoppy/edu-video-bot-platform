@@ -22,6 +22,12 @@ interface ConversationDetailsProps {
     endTime: string | null
     summary: string | null
     status: string
+    assignment?: {
+      counselorId: string | null;
+      status: string;
+      notes: string | null;
+      metadata: any;
+    }
     user?: {
       fullName: string
       email: string
@@ -34,6 +40,8 @@ export function ConversationDetails({ conversation }: ConversationDetailsProps) 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  console.log('conversation', conversation);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,10 +116,10 @@ export function ConversationDetails({ conversation }: ConversationDetailsProps) 
             </div>
           </div>
 
-          {conversation.summary && (
+          {conversation.assignment && conversation.assignment.notes &&  (
             <div>
               <h4 className="text-sm font-semibold mb-2">Summary</h4>
-              <p className="text-sm text-muted-foreground">{conversation.summary}</p>
+              <p className="text-sm text-muted-foreground">{conversation.assignment.notes}</p>
             </div>
           )}
         </div>

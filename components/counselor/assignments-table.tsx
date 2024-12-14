@@ -1,3 +1,4 @@
+'use client';
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -27,7 +28,8 @@ interface AssignmentsTableProps {
   assignments: Assignment[];
 }
 
-export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
+export function AssignmentsTable({ assignments }: AssignmentsTableProps) {  
+  
   return (
     <Table>
       <TableHeader>
@@ -47,7 +49,7 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
             <TableCell>{formatDate(assignment.createdAt)}</TableCell>
             <TableCell>{assignment.chatSessionSummary || "No summary available"}</TableCell>
             <TableCell>
-              {assignment.chatSessionId && (<Link href={`/counselor/conversations/${assignment.chatSessionId}`}>
+              {assignment.chatSessionId && (<Link href={`./counselor/conversations/${assignment.chatSessionId}`}>
                 <Button variant="outline" size="sm">
                   View Details
                 </Button>

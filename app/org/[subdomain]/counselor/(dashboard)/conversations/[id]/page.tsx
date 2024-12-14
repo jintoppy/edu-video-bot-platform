@@ -28,6 +28,8 @@ interface ChatSession {
   assignment?: {
     counselorId: string | null;
     status: string;
+    notes: string | null;
+    metadata: any;
   };
 }
 
