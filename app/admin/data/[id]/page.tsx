@@ -34,6 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, use } from "react";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DocumentData {
   id: string;
@@ -55,6 +56,8 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
   const [doc, setDoc] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentFormSchema),
@@ -95,8 +98,8 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
     fetchDoc();
   }, [params.id]);
 
-  const onSubmit = async (data: CustomData) => {
-    console.log(data);
+  const onSubmit = async (data: DocumentFormData) => {
+    setIsSaving(true);
     try {
       const response = await fetch(`/api/data`, {
         method: "PUT",
@@ -114,8 +117,19 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
       setDoc({ ...doc, ...data } as DocumentData);
       setIsEditing(false);
       router.refresh();
+      toast({
+        title: "Success",
+        description: "Document updated successfully",
+      });
     } catch (error) {
       console.error("Error updating document:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -294,7 +308,9 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Update Document</Button>
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Update Document"}
+                </Button>
               </form>
             </Form>
           ) : (

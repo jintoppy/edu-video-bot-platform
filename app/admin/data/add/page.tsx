@@ -10,6 +10,7 @@ import { documentCategoryEnum } from "@/types/data";
 import { documentFormSchema, type DocumentFormData } from "@/types/form";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Import TipTap editor dynamically to avoid SSR issues
@@ -19,6 +20,8 @@ const Tiptap = dynamic(() => import("@/components/ui/tiptap"), {
 
 const AdminAddDataPage = () => {
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentFormSchema),
     defaultValues: {
@@ -34,7 +37,8 @@ const AdminAddDataPage = () => {
     },
   });
 
-  const onSubmit = async (data: CustomData) => {
+  const onSubmit = async (data: DocumentFormData) => {
+    setIsSaving(true);
     try {
       const response = await fetch("/api/data", {
         method: "POST",
@@ -48,8 +52,19 @@ const AdminAddDataPage = () => {
 
       router.push("/admin/data");
       router.refresh();
+      toast({
+        title: "Success",
+        description: "Document added successfully",
+      });
     } catch (error) {
       console.error("Error adding custom data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -194,7 +209,9 @@ const AdminAddDataPage = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit">Add Custom Data</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Add Custom Data"}
+            </Button>
           </form>
         </Form>
       </div>
