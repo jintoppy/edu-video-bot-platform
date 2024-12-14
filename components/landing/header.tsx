@@ -12,7 +12,7 @@ import Image from "next/image";
 export default function Header() {
   const { isSignedIn, user } = useUser();
   const [dashboardUrl, setDashboardUrl] = useState("");
-  const { settings } = useOrganization();
+  const { settings, organization } = useOrganization();
 
   useEffect(() => {
     const getDashboardUrl = async () => {
@@ -78,7 +78,7 @@ export default function Header() {
           ) : (
             <GraduationCap className="h-6 w-6" />
           )}
-          Bots4Ed AI
+          {/* {organization?.name || 'Bots4Ed AI'} */}
         </Link>
         <nav className="hidden md:flex space-x-4">
           <Link

@@ -26,6 +26,7 @@ async function getOrganization(subdomain: string) {
   return {
     organization: org,
     settings: settings || {
+      logo: "",
       theme: {
         primaryColor: "#3B82F6",
         secondaryColor: "#10B981",

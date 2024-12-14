@@ -20,8 +20,9 @@ export default async function PageBuilderPage() {
                 <DashboardHeader
                     heading="Page Builder"
                     text="Customize your organization's landing page sections and content."
-                    action={
-                        <a
+                    
+                >
+                    <a
                             href={`/org/${org.subdomain}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -29,11 +30,15 @@ export default async function PageBuilderPage() {
                         >
                             View Site
                         </a>
-                    }
-                />
+                </DashboardHeader>
             <div className="space-y-4">
                 <LandingPageBuilder />
             </div>
         </DashboardShell>
     )
+    } catch (error) {
+        console.error("Error fetching organization:", error);
+        return null;
+    }
+    
 }

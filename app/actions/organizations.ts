@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { organizationInvitations, organizations, users } from "@/lib/db/schema";
+import { Organization, organizationInvitations, organizations, users } from "@/lib/db/schema";
 import { clerkClient } from "@/lib/clerk";
 import { revalidatePath } from "next/cache";
 import type { User } from "@clerk/backend";
@@ -298,3 +298,28 @@ export async function getOrganizationSchema(clerkOrgId: string): Promise<GetSche
     throw new Error("Failed to fetch organization schema");
   }
 }
+
+export async function getOrganizationByClerkOrgId(clerkOrgId: string): Promise<Organization> {
+  try {
+    const clerkOrg = await clerkClient.organizations.getOrganization({
+      organizationId: clerkOrgId,
+    });
+  
+    const orgId = clerkOrg.privateMetadata.orgId as string;
+  
+    // Get organization record first
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, orgId),
+    });
+
+    if(!org){
+      throw new Error("No org found");
+    }
+
+    return org;
+
+  } catch (error) {
+    console.error("Error fetching organization schema:", error);
+    throw new Error("Failed to fetch organization schema"); 
+  }
+  }

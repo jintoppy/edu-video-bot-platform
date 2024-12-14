@@ -6,8 +6,9 @@ import { createContext, useContext, ReactNode } from "react";
 
 interface OrganizationContextType {
   organization: Organization;
-  subdomain: string;
+  subdomain: string;  
   settings: {
+    logo: string;
     theme: {
       primaryColor: string;
       secondaryColor: string;
