@@ -8,11 +8,8 @@ import { useRouter } from "next/navigation";
 import parse from "html-react-parser";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  customDataSchema,
-  documentCategoryEnum,
-  type CustomData,
-} from "@/types/data";
+import { documentCategoryEnum } from "@/types/data";
+import { documentFormSchema, type DocumentFormData } from "@/types/form";
 import dynamic from "next/dynamic";
 import {
   Form,
@@ -59,8 +56,8 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  const form = useForm<CustomData>({
-    resolver: zodResolver(customDataSchema),
+  const form = useForm<DocumentFormData>({
+    resolver: zodResolver(documentFormSchema),
     defaultValues: {
       title: "",
       content: "",

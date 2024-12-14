@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { customDataSchema, documentCategoryEnum, type CustomData } from "@/types/data";
+import { documentCategoryEnum } from "@/types/data";
+import { documentFormSchema, type DocumentFormData } from "@/types/form";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -18,8 +19,8 @@ const Tiptap = dynamic(() => import("@/components/ui/tiptap"), {
 
 const AdminAddDataPage = () => {
   const router = useRouter();
-  const form = useForm<CustomData>({
-    resolver: zodResolver(customDataSchema),
+  const form = useForm<DocumentFormData>({
+    resolver: zodResolver(documentFormSchema),
     defaultValues: {
       title: "",
       content: "",
