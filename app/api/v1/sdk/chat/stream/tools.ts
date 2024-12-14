@@ -255,7 +255,7 @@ export const createClassifyQueryTool = (uiChatSessionId: string) => {
   const classifyQueryTool = tool({
     description: `
         Classify the user query into predefined categories
-          GENERAL_QUESTION: general questions about foreign education, visa related topics, services provided, question about the consultancy, any similar education related toopics
+          GENERAL_QUESTION: general questions about foreign education, visa related topics, services provided, question about the consultancy, any similar education related toopics. For eg. if user asks "who is your ceo", user asking about the consultancy. So, it comes under GENERAL_QUESTION. 
           SPECIFIC_PROGRAM: if user is asking about a particular education program
           RECOMMENDATION_REQUEST: if user asks to give some program recommendation based on their background, or asks about if user is elibile for a program
           HUMAN_COUNSELOR: if user asks to connect with human counselor

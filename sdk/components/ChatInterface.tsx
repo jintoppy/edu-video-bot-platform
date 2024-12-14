@@ -30,62 +30,67 @@ export function ChatInterface({
   handleInputChange,
   handleSubmit,
 }: ChatInterfaceProps) {
-
   const userMessageStyle = {
     flexDirection: "row-reverse" as any,
-    gap: '10px'
-  }
+    gap: "10px",
+  };
 
   const botMessageStyle = {
     flexDirection: "",
-    gap: '10px'
-  }
+    gap: "10px",
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Messages */}
-        {messages.map((message) => (
-          <div key={message.id} className="message-container">
-            <div
-              className={`flex items-start gap-2.5 ${
-                message.role === "user" ? "flex-row-reverse" : "flex-row"
-              }`}
-              style={message.role === "user" ? userMessageStyle : botMessageStyle}
-            >
+        {messages
+          .filter((message) => !!message.content)
+          .map((message) => (
+            <div key={message.id} className="message-container">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                  message.role === "user" ? "bg-blue-500" : "bg-gray-200"
+                className={`flex items-start gap-2.5 ${
+                  message.role === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
-              >
-                {message.role === "user" ? (
-                  <User className="h-5 w-5 text-white" />
-                ) : (
-                  <Bot className="h-5 w-5 text-gray-600" />
-                )}
-              </div>
-              <div
-                className={`flex max-w-[70%] flex-col ${
-                  message.role === "user" ? "items-end" : "items-start"
-                }`}
+                style={
+                  message.role === "user" ? userMessageStyle : botMessageStyle
+                }
               >
                 <div
-                  className={`rounded-2xl px-4 py-2 ${
-                    message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : "bg-white border border-gray-200"
+                  className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                    message.role === "user" ? "bg-blue-500" : "bg-gray-200"
                   }`}
-                  style={{
-                    borderTopRightRadius: message.role === "user" ? "4px" : "16px",
-                    borderTopLeftRadius: message.role === "user" ? "16px" : "4px",
-                  }}
                 >
-                  {message.content}
+                  {message.role === "user" ? (
+                    <User className="h-5 w-5 text-white" />
+                  ) : (
+                    <Bot className="h-5 w-5 text-gray-600" />
+                  )}
+                </div>
+                <div
+                  className={`flex max-w-[70%] flex-col ${
+                    message.role === "user" ? "items-end" : "items-start"
+                  }`}
+                >
+                  <div
+                    className={`rounded-2xl px-4 py-2 ${
+                      message.role === "user"
+                        ? "bg-blue-500 text-white"
+                        : "bg-white border border-gray-200"
+                    }`}
+                    style={{
+                      borderTopRightRadius:
+                        message.role === "user" ? "4px" : "16px",
+                      borderTopLeftRadius:
+                        message.role === "user" ? "16px" : "4px",
+                    }}
+                  >
+                    {message.content}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-start gap-2.5">
@@ -93,7 +98,10 @@ export function ChatInterface({
               <Bot className="h-5 w-5 text-gray-600" />
             </div>
             <div className="flex max-w-[70%] flex-col items-start">
-              <div className="rounded-2xl border border-gray-200 bg-white px-4 py-2" style={{ borderTopLeftRadius: "4px" }}>
+              <div
+                className="rounded-2xl border border-gray-200 bg-white px-4 py-2"
+                style={{ borderTopLeftRadius: "4px" }}
+              >
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-blue-500 animate-bounce"></div>
                   <div className="h-2 w-2 rounded-full bg-blue-500 animate-bounce [animation-delay:0.2s]"></div>

@@ -34,7 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, use } from "react";
 import { format } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentData {
   id: string;
