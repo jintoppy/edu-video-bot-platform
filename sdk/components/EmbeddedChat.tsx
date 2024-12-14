@@ -71,6 +71,7 @@ export function EmbeddedChat({
   const [error, setError] = useState("");
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicrophoneOn, setIsMicrophoneOn] = useState(false);
+  const isSubscribed = useRef(false);
 
   console.log("error", error);
 
@@ -164,8 +165,9 @@ export function EmbeddedChat({
   }
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || isSubscribed.current) return;
     const channel = pusher.subscribe(`chat-${sessionId}`);
+    isSubscribed.current = true;
     // const channel = {bind: (str:string, fn:any) => {}, }
     // channel.bind("text-chunk", (data: { text: string }) => {
     //   // Handle incoming text chunks
