@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Form,
   FormControl,
@@ -12,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -43,6 +45,13 @@ export function ApiKeySettings() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [showKey, setShowKey] = useState<Record<string, boolean>>({});
   const [isOpen, setIsOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [selectedApiKey, setSelectedApiKey] = useState<string>("");
+  const [widgetOptions, setWidgetOptions] = useState({
+    greeting: "👋 Need help choosing a program?",
+    autoOpen: true,
+    delay: 2000
+  });
 
   const form = useForm<ApiKeyFormValues>({
     resolver: zodResolver(apiKeyFormSchema),
@@ -269,13 +278,27 @@ export function ApiKeySettings() {
                       </Button>
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => deleteKey(key.id)}
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedApiKey(key.key);
+                        setExportDialogOpen(true);
+                      }}
+                    >
+                      <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                      </svg>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => deleteKey(key.id)}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 {(key.allowedDomains?.length > 0 || key.allowedIps?.length > 0 || key.monthlyQuota) && (
                   <div className="mt-2 text-sm text-muted-foreground space-y-1">
@@ -295,6 +318,98 @@ export function ApiKeySettings() {
           ))
         )}
       </div>
+
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Export SDK Integration Code</DialogTitle>
+            <DialogDescription>
+              Configure the chat widget and get the integration code
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Greeting Message</Label>
+                <Input 
+                  value={widgetOptions.greeting}
+                  onChange={(e) => setWidgetOptions(prev => ({...prev, greeting: e.target.value}))}
+                  placeholder="Enter greeting message"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Delay (ms)</Label>
+                <Input 
+                  type="number"
+                  value={widgetOptions.delay}
+                  onChange={(e) => setWidgetOptions(prev => ({...prev, delay: parseInt(e.target.value)}))}
+                  placeholder="Enter delay in milliseconds"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={widgetOptions.autoOpen}
+                  onCheckedChange={(checked) => setWidgetOptions(prev => ({...prev, autoOpen: checked}))}
+                />
+                <Label>Auto Open Widget</Label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Integration Code</Label>
+              <div className="relative">
+                <pre className="bg-muted rounded-md p-4 overflow-x-auto">
+                  <code className="text-sm">{`<script src="http://localhost:3000/sdk/edubot.js"></script>
+
+<script>
+    const eduBot = new EduBot({
+        apiKey: '${selectedApiKey}'
+    });
+
+    // to initialize as a chatwidget on the page
+    eduBot.initWidget({
+        greeting: "${widgetOptions.greeting}",
+        autoOpen: ${widgetOptions.autoOpen},
+        delay: ${widgetOptions.delay}
+    });
+</script>
+
+<button onclick="eduBot.startChat()">Start Chat</button>`}</code>
+                </pre>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<script src="http://localhost:3000/sdk/edubot.js"></script>
+
+<script>
+    const eduBot = new EduBot({
+        apiKey: '${selectedApiKey}'
+    });
+
+    // to initialize as a chatwidget on the page
+    eduBot.initWidget({
+        greeting: "${widgetOptions.greeting}",
+        autoOpen: ${widgetOptions.autoOpen},
+        delay: ${widgetOptions.delay}
+    });
+</script>
+
+<button onclick="eduBot.startChat()">Start Chat</button>`);
+                    toast.success("Code copied to clipboard");
+                  }}
+                >
+                  <CopyIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
