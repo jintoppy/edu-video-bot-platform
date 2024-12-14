@@ -44,7 +44,7 @@ export async function GET(
       })
       .from(chatSessions)
       .leftJoin(users, eq(chatSessions.studentId, users.id))
-      .leftJoin(counselorAssignments, eq(chatSessions.id, counselorAssignments.conversationId))
+      .innerJoin(counselorAssignments, eq(chatSessions.id, counselorAssignments.conversationId))
       .where(eq(chatSessions.id, conversationId))
       .orderBy(chatSessions.startTime);
 
