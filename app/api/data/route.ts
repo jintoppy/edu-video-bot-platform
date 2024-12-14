@@ -22,12 +22,13 @@ export async function POST(req: Request) {
     return NextResponse.json(authResult, { status: authResult.status });
   }
 
-  const data = await req.json();
+  const { publishedAt, ...data } = await req.json();
   const [doc] = await db.insert(documentation)
       .values({
         ...data,
         createdBy: authResult.user.id,
-        updatedBy: authResult.user.id
+        updatedBy: authResult.user.id,
+        publishedAt: data.isPublished ? new Date() : null
       })
       .returning();
 
@@ -53,14 +54,15 @@ export async function PUT(req: Request) {
   }
 
   try {
-    const { id, ...data } = await req.json();
+    const { id, publishedAt, ...data } = await req.json();
 
     // Update the documentation
     await db.update(documentation)
       .set({
         ...data,
         updatedBy: authResult.user.id,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        publishedAt: data.isPublished ? new Date() : null
       })
       .where(eq(documentation.id, id));
 
