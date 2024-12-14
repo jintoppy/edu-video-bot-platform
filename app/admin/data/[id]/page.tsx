@@ -3,8 +3,19 @@
 import { DashboardShell } from "@/components/dashboard/shell";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import parse from 'html-react-parser';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { customDataSchema, documentCategoryEnum, type CustomData } from "@/types/data";
+import dynamic from "next/dynamic";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+// Import TipTap editor dynamically to avoid SSR issues
+const Tiptap = dynamic(() => import("@/components/ui/tiptap"), {
+  ssr: false,
+});
 import {
   Card,
   CardContent,
@@ -36,6 +47,22 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const [doc, setDoc] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const form = useForm<CustomData>({
+    resolver: zodResolver(customDataSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      category: "general",
+      subcategory: "",
+      slug: "",
+      description: "",
+      keywords: [],
+      isPublished: false,
+      metadata: {},
+    },
+  });
 
   useEffect(() => {
     const fetchDoc = async () => {
@@ -44,6 +71,11 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
         if (!response.ok) throw new Error('Failed to fetch document');
         const data = await response.json();
         setDoc(data);
+        // Set form values when document is loaded
+        form.reset({
+          ...data,
+          keywords: Array.isArray(data.keywords) ? data.keywords : [],
+        });
       } catch (error) {
         console.error('Error fetching document:', error);
       } finally {
@@ -52,7 +84,30 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
     };
 
     fetchDoc();
-  }, [params.id]);
+  }, [params.id, form]);
+
+  const onSubmit = async (data: CustomData) => {
+    try {
+      const response = await fetch(`/api/data`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: params.id,
+          ...data,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update document");
+
+      setDoc({ ...doc, ...data } as DocumentData);
+      setIsEditing(false);
+      router.refresh();
+    } catch (error) {
+      console.error("Error updating document:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -81,11 +136,153 @@ const AdminDataPage = (props: { params: Promise<{ id: string }> }) => {
           heading={doc.title}
           text="Document Details"
         />
-        <Button onClick={() => router.push("/admin/data")}>
-          Back
-        </Button>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsEditing(!isEditing)}
+          >
+            {isEditing ? "Cancel" : "Edit"}
+          </Button>
+          <Button onClick={() => router.push("/admin/data")}>
+            Back
+          </Button>
+        </div>
       </div>
       <div className="space-y-6">
+        {isEditing ? (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <select
+                        className="w-full p-2 border rounded-md"
+                        {...field}
+                      >
+                        {documentCategoryEnum.options.map((category) => (
+                          <option key={category} value={category}>
+                            {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="subcategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subcategory</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter subcategory" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slug</FormLabel>
+                    <FormControl>
+                      <Input placeholder="enter-url-friendly-slug" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter short description" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="keywords"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Keywords (comma-separated)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="keyword1, keyword2, keyword3" 
+                        value={field.value?.join(', ') || ''}
+                        onChange={(e) => {
+                          const keywords = e.target.value.split(',').map(k => k.trim()).filter(Boolean);
+                          field.onChange(keywords);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Content</FormLabel>
+                    <FormControl>
+                      <Tiptap 
+                        content={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isPublished"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Published</FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit">Update Document</Button>
+            </form>
+          </Form>
+        ) : (
         <Card>
           <CardHeader>
             <CardTitle>Document Information</CardTitle>
