@@ -10,8 +10,9 @@ import { documentCategoryEnum } from "@/types/data";
 import { documentFormSchema, type DocumentFormData } from "@/types/form";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useState } from "react";
 
 // Import TipTap editor dynamically to avoid SSR issues
 const Tiptap = dynamic(() => import("@/components/ui/tiptap"), {
