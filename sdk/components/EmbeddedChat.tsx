@@ -165,8 +165,8 @@ export function EmbeddedChat({
 
   useEffect(() => {
     if (!sessionId) return;
-    // const channel = pusher.subscribe(`chat-${sessionId}`);
-    const channel = {bind: (str:string, fn:any) => {}, }
+    const channel = pusher.subscribe(`chat-${sessionId}`);
+    // const channel = {bind: (str:string, fn:any) => {}, }
     // channel.bind("text-chunk", (data: { text: string }) => {
     //   // Handle incoming text chunks
     //   append({
