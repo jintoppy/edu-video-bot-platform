@@ -7,11 +7,12 @@ import { useUser } from "@clerk/clerk-react";
 import { UserButton } from "@clerk/nextjs";
 import { getUserRole } from "@/app/actions/user";
 import { useOrganization } from "@/providers/organization-provider";
+import Image from "next/image";
 
 export default function Header() {
   const { isSignedIn, user } = useUser();
   const [dashboardUrl, setDashboardUrl] = useState("");
-  const {settings} = useOrganization();
+  const { settings } = useOrganization();
 
   useEffect(() => {
     const getDashboardUrl = async () => {
@@ -66,7 +67,18 @@ export default function Header() {
           className="flex gap-3 items-center text-2xl font-bold"
           style={{ color: settings.theme.primaryColor }}
         >
-          <GraduationCap className="h-6 w-6" /> Bots4Ed AI
+          {settings?.logo ? (
+            <Image
+              src={settings.logo}
+              alt="Organization Logo"
+              width={32}
+              height={32}
+              className="h-8 w-auto"
+            />
+          ) : (
+            <GraduationCap className="h-6 w-6" />
+          )}
+          Bots4Ed AI
         </Link>
         <nav className="hidden md:flex space-x-4">
           <Link
